@@ -31,7 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,9 +43,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import kotlinx.coroutines.flow.Flow
+import org.jetbrains.compose.resources.stringResource
 import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
 import org.speaksimpleapp.feature.chat.domain.model.ChatRole
+import speak_simple_app.feature_chat.generated.resources.Res
+import speak_simple_app.feature_chat.generated.resources.chat_avatar_text
+import speak_simple_app.feature_chat.generated.resources.chat_coach_note
+import speak_simple_app.feature_chat.generated.resources.chat_loading_previous_messages
+import speak_simple_app.feature_chat.generated.resources.chat_message_placeholder
+import speak_simple_app.feature_chat.generated.resources.chat_more_natural
+import speak_simple_app.feature_chat.generated.resources.chat_phrases
+import speak_simple_app.feature_chat.generated.resources.chat_send
+import speak_simple_app.feature_chat.generated.resources.chat_sending
+import speak_simple_app.feature_chat.generated.resources.chat_subtitle
+import speak_simple_app.feature_chat.generated.resources.chat_title
+import speak_simple_app.feature_chat.generated.resources.chat_try
+import speak_simple_app.feature_chat.generated.resources.chat_why
 
 @Composable
 fun ChatContent(
@@ -54,14 +71,15 @@ fun ChatContent(
 
     ChatScreen(
         state = state,
+        news = component.news,
         onMessageChanged = {
             component.handle(ChatComponent.UiEvent.MessageChanged(it))
         },
         onSendClicked = {
             component.handle(ChatComponent.UiEvent.SendClicked)
         },
-        onLoadOlderMessages = {
-            component.handle(ChatComponent.UiEvent.LoadOlderMessages)
+        onLoadPreviousMessages = {
+            component.handle(ChatComponent.UiEvent.LoadPreviousMessages)
         },
         modifier = modifier
     )
@@ -70,32 +88,42 @@ fun ChatContent(
 @Composable
 internal fun ChatScreen(
     state: ChatComponent.UiState,
+    news: Flow<ChatComponent.UiNews>,
     onMessageChanged: (String) -> Unit,
     onSendClicked: () -> Unit,
-    onLoadOlderMessages: () -> Unit,
+    onLoadPreviousMessages: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
     val palette = chatPalette()
+    val currentState by rememberUpdatedState(state)
 
-    LaunchedEffect(state.scrollToBottomRequest) {
-        val topItemsCount = if (state.isLoadingOlder) 1 else 0
-        val lastContentIndex = topItemsCount + state.messages.size + if (state.feedback != null) 1 else 0 - 1
-        if (lastContentIndex >= 0) {
-            listState.animateScrollToItem(lastContentIndex)
+    LaunchedEffect(news) {
+        news.collect { uiNews ->
+            when (uiNews) {
+                ChatComponent.UiNews.ScrollToBottom -> {
+                    withFrameNanos { }
+                    val topItemsCount = if (currentState.isPreviousLoading) 1 else 0
+                    val lastContentIndex =
+                        topItemsCount + currentState.messages.size + if (currentState.feedback != null) 1 else 0 - 1
+                    if (lastContentIndex >= 0) {
+                        listState.animateScrollToItem(lastContentIndex)
+                    }
+                }
+            }
         }
     }
 
-    LaunchedEffect(listState, state.hasMoreOlder, state.isLoadingOlder, state.isInitialLoading) {
+    LaunchedEffect(listState, state.hasMorePrevious, state.isPreviousLoading, state.isInitialLoading) {
         snapshotFlow { listState.firstVisibleItemIndex }
             .collect { firstVisibleItemIndex ->
                 if (
                     firstVisibleItemIndex <= 1 &&
-                    state.hasMoreOlder &&
-                    !state.isLoadingOlder &&
+                    state.hasMorePrevious &&
+                    !state.isPreviousLoading &&
                     !state.isInitialLoading
                 ) {
-                    onLoadOlderMessages()
+                    onLoadPreviousMessages()
                 }
             }
     }
@@ -120,10 +148,7 @@ internal fun ChatScreen(
                 .fillMaxSize()
                 .padding(start = 16.dp, top = 12.dp, end = 16.dp)
         ) {
-            ChatHeader(
-                title = state.title,
-                subtitle = state.subtitle
-            )
+            ChatHeader()
             Spacer(modifier = Modifier.height(12.dp))
             LazyColumn(
                 modifier = Modifier
@@ -133,9 +158,9 @@ internal fun ChatScreen(
                 contentPadding = PaddingValues(top = 2.dp, bottom = 112.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                if (state.isLoadingOlder) {
-                    item(key = "loading-older") {
-                        LoadingOlderMessages()
+                if (state.isPreviousLoading) {
+                    item(key = "loading-previous") {
+                        LoadingPreviousMessages()
                     }
                 }
 
@@ -168,7 +193,7 @@ internal fun ChatScreen(
 }
 
 @Composable
-private fun LoadingOlderMessages() {
+private fun LoadingPreviousMessages() {
     val palette = chatPalette()
     Box(
         modifier = Modifier
@@ -177,7 +202,7 @@ private fun LoadingOlderMessages() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Loading earlier messages...",
+            text = stringResource(Res.string.chat_loading_previous_messages),
             style = MaterialTheme.typography.labelSmall,
             color = palette.secondaryText
         )
@@ -185,10 +210,7 @@ private fun LoadingOlderMessages() {
 }
 
 @Composable
-private fun ChatHeader(
-    title: String,
-    subtitle: String
-) {
+private fun ChatHeader() {
     val palette = chatPalette()
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -203,7 +225,7 @@ private fun ChatHeader(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "S",
+                text = stringResource(Res.string.chat_avatar_text),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = palette.avatarText
@@ -211,13 +233,13 @@ private fun ChatHeader(
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = title,
+                text = stringResource(Res.string.chat_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = palette.primaryText
             )
             Text(
-                text = subtitle,
+                text = stringResource(Res.string.chat_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = palette.secondaryText
             )
@@ -290,23 +312,23 @@ private fun FeedbackCard(feedback: ChatFeedback) {
                         .background(palette.coachAccent)
                 )
                 Text(
-                    text = "Coach note",
+                    text = stringResource(Res.string.chat_coach_note),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = palette.coachText
                 )
             }
             FeedbackSection(
-                title = "More natural",
+                title = stringResource(Res.string.chat_more_natural),
                 body = feedback.improvedText
             )
             FeedbackSection(
-                title = "Why",
+                title = stringResource(Res.string.chat_why),
                 body = feedback.explanation
             )
             HorizontalDivider(color = palette.coachText.copy(alpha = 0.12f))
-            CompactList(title = "Try", items = feedback.suggestions.take(2))
-            CompactList(title = "Phrases", items = feedback.constructions.take(3))
+            CompactList(title = stringResource(Res.string.chat_try), items = feedback.suggestions.take(2))
+            CompactList(title = stringResource(Res.string.chat_phrases), items = feedback.constructions.take(3))
         }
     }
 }
@@ -410,7 +432,7 @@ private fun ChatComposer(
                     ) {
                         if (text.isEmpty()) {
                             Text(
-                                text = "Message",
+                                text = stringResource(Res.string.chat_message_placeholder),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = palette.secondaryText.copy(alpha = 0.62f)
                             )
@@ -447,7 +469,11 @@ private fun SendAction(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = if (isSending) "..." else ">",
+            text = if (isSending) {
+                stringResource(Res.string.chat_sending)
+            } else {
+                stringResource(Res.string.chat_send)
+            },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = contentColor

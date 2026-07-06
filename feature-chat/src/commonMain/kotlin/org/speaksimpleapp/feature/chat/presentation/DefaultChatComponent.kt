@@ -9,55 +9,90 @@ import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import org.speaksimpleapp.feature.chat.presentation.ChatComponent.UiEvent
+import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
 import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
-import org.speaksimpleapp.feature.chat.domain.model.ChatRole
+import org.speaksimpleapp.feature.chat.domain.model.ChatMessages
+import org.speaksimpleapp.feature.chat.presentation.ChatComponent.UiNews
 import org.speaksimpleapp.feature.chat.domain.usecase.LoadChatMessagesUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatMessagesUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
+import org.speaksimpleapp.feature.chat.presentation.ChatComponent.UiEvent
 
 internal class DefaultChatComponent(
     componentContext: ComponentContext,
     loadChatMessagesUseCase: LoadChatMessagesUseCase,
+    observeChatMessagesUseCase: ObserveChatMessagesUseCase,
     sendChatMessageUseCase: SendChatMessageUseCase,
-    chatDispatchers: ChatDispatchers
+    coroutineDispatchers: CoroutineDispatchers
 ) : ChatComponent, ComponentContext by componentContext {
     private val store: ChatStore = instanceKeeper.getOrCreate {
         ChatStore(
             loadChatMessagesUseCase = loadChatMessagesUseCase,
+            observeChatMessagesUseCase = observeChatMessagesUseCase,
             sendChatMessageUseCase = sendChatMessageUseCase,
-            chatDispatchers = chatDispatchers
+            coroutineDispatchers = coroutineDispatchers
         )
     }
 
     override val uiState: Value<ChatComponent.UiState> = store.uiState
+    override val news = store.news
 
     override fun handle(uiEvent: UiEvent) {
         when (uiEvent) {
             is UiEvent.MessageChanged -> store.onMessageChanged(uiEvent.message)
             is UiEvent.SendClicked -> store.onSendClicked()
-            is UiEvent.LoadOlderMessages -> store.loadOlderMessages()
+            is UiEvent.LoadPreviousMessages -> store.onLoadPreviousMessages()
         }
     }
 
     private class ChatStore(
         private val loadChatMessagesUseCase: LoadChatMessagesUseCase,
+        private val observeChatMessagesUseCase: ObserveChatMessagesUseCase,
         private val sendChatMessageUseCase: SendChatMessageUseCase,
-        chatDispatchers: ChatDispatchers
+        uiStateMapper: ChatUiStateMapper = DefaultChatUiStateMapper,
+        coroutineDispatchers: CoroutineDispatchers
     ) : InstanceKeeper.Instance {
 
-        private val scope = CoroutineScope(chatDispatchers.main + SupervisorJob())
+        private val scope = CoroutineScope(coroutineDispatchers.main + SupervisorJob())
         private val dataState: MutableValue<DataState> = MutableValue(DataState())
-        val uiState: Value<ChatComponent.UiState> = dataState.map(DataState::toUi)
+        val uiState: Value<ChatComponent.UiState> = dataState.map(uiStateMapper::invoke)
+        private val _news = Channel<UiNews>(Channel.BUFFERED)
+        val news = _news.receiveAsFlow()
 
         init {
+            observeMessages()
             loadInitialMessages()
         }
 
-        override fun onDestroy() {
-            scope.cancel()
+        private fun observeMessages() {
+            scope.launch {
+                observeChatMessagesUseCase()
+                    .filterNotNull()
+                    .collect { messages ->
+                        dataState.update {
+                            it.copy(
+                                messages = messages,
+                                isInitialLoading = false
+                            )
+                        }
+                        if ( dataState.value.messages == null) {
+                            _news.trySend(UiNews.ScrollToBottom)
+                        }
+                    }
+            }
+        }
+
+        private fun loadInitialMessages() {
+            scope.launch {
+                loadChatMessagesUseCase(
+                    forceUpdate = true
+                )
+            }
         }
 
         fun onMessageChanged(message: String) {
@@ -71,130 +106,88 @@ internal class DefaultChatComponent(
             val text = current.inputMessage.trim()
             if (text.isEmpty() || current.isSending) return
 
-            val userMessage = ChatMessage(
-                id = "user-${current.messages.size}",
-                role = ChatRole.User,
-                text = text
-            )
-            val context = current.messages + userMessage
-
             dataState.update {
                 it.copy(
                     inputMessage = "",
-                    messages = context,
                     feedback = null,
-                    isSending = true,
-                    scrollToBottomRequest = it.scrollToBottomRequest + 1
+                    isSending = true
                 )
             }
 
             scope.launch {
                 val response = sendChatMessageUseCase(
                     text = text,
-                    context = context
+                    context = dataState.value.messages?.messages.orEmpty()
                 )
 
                 dataState.update {
                     it.copy(
-                        messages = it.messages + ChatMessage(
-                            id = "assistant-${it.messages.size}",
-                            role = ChatRole.Assistant,
-                            text = response.answer
-                        ),
                         feedback = response.feedback,
-                        isSending = false,
-                        scrollToBottomRequest = it.scrollToBottomRequest + 1
+                        isSending = false
                     )
                 }
+                _news.trySend(UiNews.ScrollToBottom)
             }
         }
 
-        private fun loadInitialMessages() {
-            scope.launch {
-                val page = loadChatMessagesUseCase(
-                    beforeMessageId = null,
-                    limit = PAGE_SIZE
-                )
-
-                dataState.update {
-                    it.copy(
-                        messages = page.messages,
-                        nextCursor = page.nextCursor,
-                        hasMoreOlder = page.hasMore,
-                        isInitialLoading = false,
-                        scrollToBottomRequest = it.scrollToBottomRequest + 1
-                    )
-                }
-            }
-        }
-
-        fun loadOlderMessages() {
+        fun onLoadPreviousMessages() {
             val current = dataState.value
-            if (current.isInitialLoading || current.isLoadingOlder || !current.hasMoreOlder) return
+            val messages = current.messages ?: return
+            val oldestMessageId = messages.oldestMessageId
+            if (
+                current.isInitialLoading ||
+                current.isPreviousLoading ||
+                !messages.hasMorePrevious ||
+                oldestMessageId == null
+            ) {
+                return
+            }
 
             dataState.update {
-                it.copy(isLoadingOlder = true)
+                it.copy(isPreviousLoading = true)
             }
 
             scope.launch {
-                val page = loadChatMessagesUseCase(
-                    beforeMessageId = current.nextCursor,
-                    limit = PAGE_SIZE
+                loadChatMessagesUseCase(
+                    beforeMessageId = oldestMessageId,
+                    forceUpdate = true
                 )
-
                 dataState.update {
-                    it.copy(
-                        messages = page.messages + it.messages,
-                        nextCursor = page.nextCursor,
-                        hasMoreOlder = page.hasMore,
-                        isLoadingOlder = false
-                    )
+                    it.copy(isPreviousLoading = false)
                 }
             }
         }
 
-        private data class DataState(
-            val inputMessage: String = "",
-            val messages: List<ChatMessage> = emptyList(),
-            val nextCursor: String? = null,
-            val hasMoreOlder: Boolean = false,
-            val isInitialLoading: Boolean = true,
-            val isLoadingOlder: Boolean = false,
-            val feedback: ChatFeedback? = null,
-            val isSending: Boolean = false,
-            val scrollToBottomRequest: Int = 0
-        ) {
-            fun toUi(): ChatComponent.UiState =
-                ChatComponent.UiState(
-                    title = "SpeakSimple Chat",
-                    subtitle = "Text practice now. Voice messages come next.",
-                    inputMessage = inputMessage,
-                    messages = messages,
-                    feedback = feedback,
-                    isInitialLoading = isInitialLoading,
-                    isLoadingOlder = isLoadingOlder,
-                    hasMoreOlder = hasMoreOlder,
-                    isSending = isSending,
-                    scrollToBottomRequest = scrollToBottomRequest
-                )
+        override fun onDestroy() {
+            _news.close()
+            scope.cancel()
         }
+
     }
+
+    internal data class DataState(
+        val inputMessage: String = "",
+        val messages: ChatMessages? = null,
+        val feedback: ChatFeedback? = null,
+        val isInitialLoading: Boolean = true,
+        val isPreviousLoading: Boolean = false,
+        val isSending: Boolean = false
+    )
 
     class Factory(
         private val loadChatMessagesUseCase: LoadChatMessagesUseCase,
+        private val observeChatMessagesUseCase: ObserveChatMessagesUseCase,
         private val sendChatMessageUseCase: SendChatMessageUseCase,
-        private val chatDispatchers: ChatDispatchers
+        private val coroutineDispatchers: CoroutineDispatchers
     ) : ChatComponent.Factory {
         override fun invoke(componentContext: ComponentContext): ChatComponent =
             DefaultChatComponent(
                 componentContext = componentContext,
                 loadChatMessagesUseCase = loadChatMessagesUseCase,
+                observeChatMessagesUseCase = observeChatMessagesUseCase,
                 sendChatMessageUseCase = sendChatMessageUseCase,
-                chatDispatchers = chatDispatchers
+                coroutineDispatchers = coroutineDispatchers
             )
-    }
-    private companion object {
-        const val PAGE_SIZE = 12
     }
 
 }

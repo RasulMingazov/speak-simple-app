@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
@@ -16,9 +17,10 @@ private fun ChatScreenLightPreview() {
     PreviewTheme(darkTheme = false) {
         ChatScreen(
             state = previewState(),
+            news = emptyFlow(),
             onMessageChanged = {},
             onSendClicked = {},
-            onLoadOlderMessages = {}
+            onLoadPreviousMessages = {}
         )
     }
 }
@@ -29,17 +31,16 @@ private fun ChatScreenDarkPreview() {
     PreviewTheme(darkTheme = true) {
         ChatScreen(
             state = previewState(),
+            news = emptyFlow(),
             onMessageChanged = {},
             onSendClicked = {},
-            onLoadOlderMessages = {}
+            onLoadPreviousMessages = {}
         )
     }
 }
 
 private fun previewState(): ChatComponent.UiState =
     ChatComponent.UiState(
-        title = "SpeakSimple Chat",
-        subtitle = "Text practice now. Voice messages come next.",
         inputMessage = "Can you help me?",
         messages = listOf(
             ChatMessage(
@@ -73,10 +74,9 @@ private fun previewState(): ChatComponent.UiState =
             )
         ),
         isInitialLoading = false,
-        isLoadingOlder = false,
-        hasMoreOlder = true,
-        isSending = false,
-        scrollToBottomRequest = 0
+        isPreviousLoading = false,
+        hasMorePrevious = true,
+        isSending = false
     )
 
 @Composable

@@ -1,9 +1,13 @@
 package org.speaksimpleapp.feature.chat.data
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessagesPage
+import org.speaksimpleapp.feature.chat.domain.model.ChatMessages
 import org.speaksimpleapp.feature.chat.domain.model.ChatRequest
 import org.speaksimpleapp.feature.chat.domain.model.ChatResponse
 import org.speaksimpleapp.feature.chat.domain.model.ChatRole
@@ -12,12 +16,19 @@ import org.speaksimpleapp.feature.chat.domain.repository.ChatRepository
 internal class FakeChatRepository : ChatRepository {
 
     private val history: List<ChatMessage> = buildHistory()
+    private val localMessagesState = MutableStateFlow<ChatMessages?>(null)
+
+    override fun observeMessages(): Flow<ChatMessages?> =
+        localMessagesState.asStateFlow()
 
     override suspend fun loadMessages(
         beforeMessageId: String?,
-        limit: Int
-    ): ChatMessagesPage {
-        delay(650)
+        limit: Int,
+        forceUpdate: Boolean
+    ) {
+        if (forceUpdate) {
+            delay(650)
+        }
 
         val endIndex = beforeMessageId
             ?.let { cursor -> history.indexOfFirst { it.id == cursor } }
@@ -26,20 +37,41 @@ internal class FakeChatRepository : ChatRepository {
         val startIndex = (endIndex - limit).coerceAtLeast(0)
         val messages = history.subList(startIndex, endIndex)
 
-        return ChatMessagesPage(
-            messages = messages,
-            nextCursor = messages.firstOrNull()?.id,
-            hasMore = startIndex > 0
-        )
+        localMessagesState.update { currentMessages ->
+            val updatedMessages = if (beforeMessageId == null) {
+                messages
+            } else {
+                (messages + currentMessages.orEmpty().messages).distinctBy(ChatMessage::id)
+            }
+
+            ChatMessages(
+                messages = updatedMessages,
+                oldestMessageId = messages.firstOrNull()?.id ?: currentMessages?.oldestMessageId,
+                hasMorePrevious = startIndex > 0
+            )
+        }
     }
 
     override suspend fun sendMessage(request: ChatRequest): ChatResponse {
+        val text = request.text.trim()
+        val userMessage = ChatMessage(
+            id = "user-${localMessagesState.value.orEmpty().messages.size}",
+            role = ChatRole.User,
+            text = text
+        )
+
+        localMessagesState.update { messages ->
+            ChatMessages(
+                messages = messages.orEmpty().messages + userMessage,
+                oldestMessageId = messages?.oldestMessageId,
+                hasMorePrevious = messages?.hasMorePrevious ?: false
+            )
+        }
+
         delay(900)
 
-        val text = request.text.trim()
         val improved = improve(text)
-
-        return ChatResponse(
+        val response = ChatResponse(
             answer = "Got it. I understood: \"$text\". Try adding one detail or asking a follow-up question to keep the conversation natural.",
             feedback = ChatFeedback(
                 improvedText = improved,
@@ -57,6 +89,19 @@ internal class FakeChatRepository : ChatRepository {
                 )
             )
         )
+
+        localMessagesState.update { messages ->
+            val currentMessages = messages.orEmpty()
+            currentMessages.copy(
+                messages = currentMessages.messages + ChatMessage(
+                    id = "assistant-${currentMessages.messages.size}",
+                    role = ChatRole.Assistant,
+                    text = response.answer
+                )
+            )
+        }
+
+        return response
     }
 
     private fun improve(text: String): String {
@@ -111,4 +156,11 @@ internal class FakeChatRepository : ChatRepository {
             2 -> "Nice. A more natural version is: Yesterday I talked with my friend about traveling."
             else -> "You can make it softer: Could you let me know what the deadline is?"
         }
+
+    private fun ChatMessages?.orEmpty(): ChatMessages =
+        this ?: ChatMessages(
+            messages = emptyList(),
+            oldestMessageId = null,
+            hasMorePrevious = false
+        )
 }

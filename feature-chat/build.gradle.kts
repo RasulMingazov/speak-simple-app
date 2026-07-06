@@ -1,3 +1,5 @@
+import org.speaksimpleapp.convention.extensions.commonMainDependencies
+
 plugins {
     alias(libs.plugins.speaksimple.kmp.library)
     alias(libs.plugins.speaksimple.compose.multiplatform)
@@ -15,4 +17,8 @@ kotlin {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
+}
+
+commonMainDependencies {
+    implementation(project(":core-common"))
 }

@@ -1,12 +1,13 @@
 package org.speaksimpleapp.feature.chat.di
 
+import org.speaksimpleapp.core.common.coroutines.DefaultCoroutineDispatchers
 import org.speaksimpleapp.feature.chat.data.FakeChatRepository
 import org.speaksimpleapp.feature.chat.domain.repository.ChatRepository
 import org.speaksimpleapp.feature.chat.domain.usecase.LoadChatMessagesUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatMessagesUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
 import org.speaksimpleapp.feature.chat.presentation.ChatComponent
 import org.speaksimpleapp.feature.chat.presentation.DefaultChatComponent
-import org.speaksimpleapp.feature.chat.presentation.DefaultChatDispatchers
 
 class DefaultChatContainer : ChatContainer {
 
@@ -18,6 +19,10 @@ class DefaultChatContainer : ChatContainer {
         LoadChatMessagesUseCase(chatRepository)
     }
 
+    private val observeChatMessagesUseCase: ObserveChatMessagesUseCase by lazy {
+        ObserveChatMessagesUseCase(chatRepository)
+    }
+
     private val sendChatMessageUseCase: SendChatMessageUseCase by lazy {
         SendChatMessageUseCase(chatRepository)
     }
@@ -25,8 +30,9 @@ class DefaultChatContainer : ChatContainer {
     override val chatComponentFactory: ChatComponent.Factory by lazy {
         DefaultChatComponent.Factory(
             loadChatMessagesUseCase = loadChatMessagesUseCase,
+            observeChatMessagesUseCase = observeChatMessagesUseCase,
             sendChatMessageUseCase = sendChatMessageUseCase,
-            chatDispatchers = DefaultChatDispatchers
+            coroutineDispatchers = DefaultCoroutineDispatchers
         )
     }
 }

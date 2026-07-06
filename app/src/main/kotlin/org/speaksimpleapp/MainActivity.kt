@@ -7,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.defaultComponentContext
 import org.speaksimpleapp.feature.root.di.DefaultRootContainer
-import com.arkivanov.decompose.retainedComponent
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalDecomposeApi::class)
@@ -15,11 +14,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val rootComponent = retainedComponent {
-            DefaultRootContainer().rootComponentFactory(
-                componentContext = defaultComponentContext()
-            )
-        }
+        val rootComponent = DefaultRootContainer().rootComponentFactory(
+            componentContext = defaultComponentContext()
+        )
 
         setContent {
             App(rootComponent = rootComponent)
