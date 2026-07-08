@@ -9,6 +9,7 @@ composeMaterial3 = "1.9.0"
 compileSdk = "36"
 coreKtx = "1.17.0"
 decompose = "3.0.0-alpha04"
+essenty = "2.0.0-alpha02"
 espressoCore = "3.7.0"
 java = "17"
 junit = "4.13.2"
@@ -39,6 +40,7 @@ compose-ui-tooling-preview = { group = "org.jetbrains.compose.components", name 
 compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }
 decompose = { group = "com.arkivanov.decompose", name = "decompose", version.ref = "decompose" }
 decompose-extensions-compose = { group = "com.arkivanov.decompose", name = "extensions-compose", version.ref = "decompose" }
+essenty-instance-keeper = { group = "com.arkivanov.essenty", name = "instance-keeper", version.ref = "essenty" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }

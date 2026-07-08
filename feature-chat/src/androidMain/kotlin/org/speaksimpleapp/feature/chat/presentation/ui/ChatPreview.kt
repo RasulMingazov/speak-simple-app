@@ -1,15 +1,16 @@
-package org.speaksimpleapp.feature.chat.presentation
+package org.speaksimpleapp.feature.chat.presentation.ui
 
-import androidx.compose.runtime.Composable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.flow.emptyFlow
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
 import org.speaksimpleapp.feature.chat.domain.model.ChatRole
+import org.speaksimpleapp.feature.chat.presentation.ChatComponent
 
 @Preview
 @Composable
@@ -85,11 +86,37 @@ private fun PreviewTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = if (darkTheme) {
-            darkColorScheme(background = Color(0xFF111318))
-        } else {
-            lightColorScheme(background = Color(0xFFFBFCFE))
-        },
+        colorScheme = if (darkTheme) darkPreviewColors() else lightPreviewColors(),
         content = content
     )
 }
+
+private fun lightPreviewColors() = lightColorScheme(
+    primary = Color(0xFF7652D6),
+    onPrimary = Color.White,
+    secondary = Color(0xFF967A00),
+    background = Color(0xFFFCFBFF),
+    onBackground = Color(0xFF181521),
+    surface = Color.White,
+    onSurface = Color(0xFF181521),
+    surfaceVariant = Color(0xFFF0EDF7),
+    onSurfaceVariant = Color(0xFF625B70),
+    primaryContainer = Color(0xFFE5D9FF),
+    secondaryContainer = Color(0xFFFFEDB7),
+    outline = Color(0xFFE0DAEA)
+)
+
+private fun darkPreviewColors() = darkColorScheme(
+    primary = Color(0xFFBFA2FF),
+    onPrimary = Color(0xFF201632),
+    secondary = Color(0xFFFFD66B),
+    background = Color(0xFF111116),
+    onBackground = Color(0xFFF6F3FB),
+    surface = Color(0xFF17171E),
+    onSurface = Color(0xFFF6F3FB),
+    surfaceVariant = Color(0xFF25242C),
+    onSurfaceVariant = Color(0xFFB9B4C2),
+    primaryContainer = Color(0xFF3B2A59),
+    secondaryContainer = Color(0xFF37301D),
+    outline = Color(0xFF34323D)
+)

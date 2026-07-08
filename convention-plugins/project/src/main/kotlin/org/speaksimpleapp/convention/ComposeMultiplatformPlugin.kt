@@ -2,6 +2,7 @@ package org.speaksimpleapp.convention
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.speaksimpleapp.convention.extensions.commonMainDependencies
 import org.speaksimpleapp.convention.extensions.libs
 
@@ -18,6 +19,14 @@ class ComposeMultiplatformPlugin : Plugin<Project> {
             implementation(libs.compose.resources)
             implementation(libs.compose.ui)
             implementation(libs.compose.ui.tooling.preview)
+        }
+
+        tasks.matching { it.name.endsWith("ComposeResourcesToAndroidAssets") }.configureEach {
+            val outputDirectory = javaClass
+                .getMethod("getOutputDirectory")
+                .invoke(this) as DirectoryProperty
+
+            outputDirectory.set(layout.buildDirectory.dir("generated/assets/$name"))
         }
     }
 }
