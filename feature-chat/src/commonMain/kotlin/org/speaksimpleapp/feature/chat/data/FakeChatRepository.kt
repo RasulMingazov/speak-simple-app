@@ -9,7 +9,6 @@ import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessages
 import org.speaksimpleapp.feature.chat.domain.model.ChatRequest
-import org.speaksimpleapp.feature.chat.domain.model.ChatResponse
 import org.speaksimpleapp.feature.chat.domain.model.ChatRole
 import org.speaksimpleapp.feature.chat.domain.repository.ChatRepository
 
@@ -52,12 +51,13 @@ internal class FakeChatRepository : ChatRepository {
         }
     }
 
-    override suspend fun sendMessage(request: ChatRequest): ChatResponse {
+    override suspend fun sendMessage(request: ChatRequest) {
         val text = request.text.trim()
         val userMessage = ChatMessage(
             id = "user-${localMessagesState.value.orEmpty().messages.size}",
             role = ChatRole.User,
-            text = text
+            text = text,
+            feedback = null
         )
 
         localMessagesState.update { messages ->
@@ -71,37 +71,42 @@ internal class FakeChatRepository : ChatRepository {
         delay(900)
 
         val improved = improve(text)
-        val response = ChatResponse(
-            answer = "Got it. I understood: \"$text\". Try adding one detail or asking a follow-up question to keep the conversation natural.",
-            feedback = ChatFeedback(
-                improvedText = improved,
-                explanation = "Your idea is understandable. A natural English message usually adds a little context and uses a softer phrase before the main point.",
-                suggestions = listOf(
-                    "Add context: time, reason, place, or feeling.",
-                    "Use a soft opener like \"I was wondering...\".",
-                    "Make the message one complete sentence."
-                ),
-                constructions = listOf(
-                    "I was wondering if...",
-                    "What I mean is...",
-                    "It would be great to...",
-                    "Could you tell me more about..."
-                )
+        val answer = "Got it. I understood: \"$text\". Try adding one detail or asking a follow-up question to keep the conversation natural."
+        val feedback = ChatFeedback(
+            improvedText = improved,
+            explanation = "Your idea is understandable. A natural English message usually adds a little context and uses a softer phrase before the main point.",
+            suggestions = listOf(
+                "Add context: time, reason, place, or feeling.",
+                "Use a soft opener like \"I was wondering...\".",
+                "Make the message one complete sentence."
+            ),
+            constructions = listOf(
+                "I was wondering if...",
+                "What I mean is...",
+                "It would be great to...",
+                "Could you tell me more about..."
             )
         )
 
         localMessagesState.update { messages ->
             val currentMessages = messages.orEmpty()
             currentMessages.copy(
-                messages = currentMessages.messages + ChatMessage(
-                    id = "assistant-${currentMessages.messages.size}",
-                    role = ChatRole.Assistant,
-                    text = response.answer
+                messages = currentMessages.messages + listOf(
+                    ChatMessage(
+                        id = "assistant-${currentMessages.messages.size}",
+                        role = ChatRole.Assistant,
+                        text = answer,
+                        feedback = null
+                    ),
+                    ChatMessage(
+                        id = "feedback-${currentMessages.messages.size + 1}",
+                        role = ChatRole.Feedback,
+                        text = "",
+                        feedback = feedback
+                    )
                 )
             )
         }
-
-        return response
     }
 
     private fun improve(text: String): String {
@@ -123,19 +128,22 @@ internal class FakeChatRepository : ChatRepository {
             messages += ChatMessage(
                 id = "history-user-$number",
                 role = ChatRole.User,
-                text = sampleUserMessage(number)
+                text = sampleUserMessage(number),
+                feedback = null
             )
             messages += ChatMessage(
                 id = "history-assistant-$number",
                 role = ChatRole.Assistant,
-                text = sampleAssistantMessage(number)
+                text = sampleAssistantMessage(number),
+                feedback = null
             )
         }
 
         messages += ChatMessage(
             id = "welcome-1",
             role = ChatRole.Assistant,
-            text = "Hi! Send me a message in English, and I will help you make it sound more natural."
+            text = "Hi! Send me a message in English, and I will help you make it sound more natural.",
+            feedback = null
         )
 
         return messages

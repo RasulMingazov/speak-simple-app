@@ -1,4 +1,4 @@
-package org.speaksimpleapp.feature.chat.presentation
+package org.speaksimpleapp.feature.chat.presentation.messages
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,76 +16,64 @@ import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
 import org.speaksimpleapp.feature.chat.data.FakeChatRepository
 import org.speaksimpleapp.feature.chat.domain.usecase.LoadChatMessagesUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatMessagesUseCase
-import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ChatViewModelTest {
+class ChatMessagesModelTest {
 
     @Test
     fun loadsInitialMessages() = runTest {
-        val viewModel = createViewModel()
+        val model = createModel()
 
         advanceUntilIdle()
 
-        val state = viewModel.uiState.value
+        val state = model.uiState.value
         assertFalse(state.isInitialLoading)
         assertTrue(state.messages.isNotEmpty())
         assertTrue(state.hasMorePrevious)
     }
 
     @Test
-    fun sendsMessageThroughObservedMessages() = runTest {
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        viewModel.dispatch(ChatComponent.Event.MessageChanged("Hello"))
-        viewModel.dispatch(ChatComponent.Event.SendClicked)
-        advanceUntilIdle()
-
-        val state = viewModel.uiState.value
-        assertFalse(state.isSending)
-        assertEquals("Hello", state.messages[state.messages.lastIndex - 1].text)
-        assertTrue(state.messages.last().text.contains("Got it"))
-    }
-
-    @Test
     fun sendsScrollNewsAfterInitialMessagesLoaded() = runTest {
-        val viewModel = createViewModel()
-        val news = async { viewModel.news.first() }
+        val model = createModel()
+        val news = async { model.news.first() }
 
         advanceUntilIdle()
 
         assertEquals(
-            expected = ChatComponent.News.ScrollToBottom,
+            expected = ChatMessagesComponent.News.ScrollToBottom,
             actual = news.await()
         )
     }
 
     @Test
-    fun sendsScrollNewsAfterMessageSent() = runTest {
-        val viewModel = createViewModel()
-        val initialNews = async { viewModel.news.first() }
-        advanceUntilIdle()
-        initialNews.await()
-
-        val sendNews = async { viewModel.news.first() }
-        viewModel.dispatch(ChatComponent.Event.MessageChanged("Hello"))
-        viewModel.dispatch(ChatComponent.Event.SendClicked)
+    fun loadsPreviousMessages() = runTest {
+        val model = createModel()
         advanceUntilIdle()
 
-        assertEquals(
-            expected = ChatComponent.News.ScrollToBottom,
-            actual = sendNews.await()
+        val initialState = model.uiState.value
+        val initialFirstMessageId = initialState.messages.first().id
+        val previousPageKey = requireNotNull(initialState.previousPageKey)
+
+        model.dispatch(
+            ChatMessagesComponent.Event.LoadPreviousMessages(
+                beforeMessageId = previousPageKey
+            )
         )
+        advanceUntilIdle()
+
+        val updatedState = model.uiState.value
+        assertTrue(updatedState.messages.size > initialState.messages.size)
+        assertFalse(updatedState.isPreviousLoading)
+        assertTrue(updatedState.messages.any { it.id == initialFirstMessageId })
+        assertFalse(updatedState.messages.first().id == initialFirstMessageId)
     }
 
-    private fun TestScope.createViewModel(): ChatViewModel {
+    private fun TestScope.createModel(): ChatMessagesModel {
         val repository = FakeChatRepository()
 
-        return ChatViewModel(
+        return ChatMessagesModel(
             loadChatMessagesUseCase = LoadChatMessagesUseCase(repository),
             observeChatMessagesUseCase = ObserveChatMessagesUseCase(repository),
-            sendChatMessageUseCase = SendChatMessageUseCase(repository),
             coroutineDispatchers = object : CoroutineDispatchers {
                 override val main: CoroutineDispatcher = StandardTestDispatcher(testScheduler)
             }

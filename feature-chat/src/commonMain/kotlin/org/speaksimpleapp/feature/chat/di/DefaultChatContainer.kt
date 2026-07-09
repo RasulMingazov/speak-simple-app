@@ -7,8 +7,11 @@ import org.speaksimpleapp.feature.chat.domain.usecase.LoadChatMessagesUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatMessagesUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
 import org.speaksimpleapp.feature.chat.presentation.ChatComponent
-import org.speaksimpleapp.feature.chat.presentation.ChatViewModel
 import org.speaksimpleapp.feature.chat.presentation.DefaultChatComponent
+import org.speaksimpleapp.feature.chat.presentation.input.DefaultChatInputComponent
+import org.speaksimpleapp.feature.chat.presentation.input.ChatInputModel
+import org.speaksimpleapp.feature.chat.presentation.messages.DefaultChatMessagesComponent
+import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesModel
 
 class DefaultChatContainer : ChatContainer {
 
@@ -28,16 +31,25 @@ class DefaultChatContainer : ChatContainer {
         SendChatMessageUseCase(chatRepository)
     }
 
-    private val chatViewModelFactory = ChatViewModel.Factory(
+    private val chatMessagesModelFactory = ChatMessagesModel.Factory(
         loadChatMessagesUseCase = loadChatMessagesUseCase,
         observeChatMessagesUseCase = observeChatMessagesUseCase,
+        coroutineDispatchers = DefaultCoroutineDispatchers
+    )
+
+    private val chatInputModelFactory = ChatInputModel.Factory(
         sendChatMessageUseCase = sendChatMessageUseCase,
         coroutineDispatchers = DefaultCoroutineDispatchers
     )
 
     override val chatComponentFactory: ChatComponent.Factory by lazy {
         DefaultChatComponent.Factory(
-            chatViewModelFactory = chatViewModelFactory
+            chatMessagesComponentFactory = DefaultChatMessagesComponent.Factory(
+                modelFactory = chatMessagesModelFactory
+            ),
+            chatInputComponentFactory = DefaultChatInputComponent.Factory(
+                modelFactory = chatInputModelFactory
+            )
         )
     }
 }

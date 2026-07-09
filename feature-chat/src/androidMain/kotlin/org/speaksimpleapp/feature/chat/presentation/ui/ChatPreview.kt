@@ -10,14 +10,17 @@ import kotlinx.coroutines.flow.emptyFlow
 import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
 import org.speaksimpleapp.feature.chat.domain.model.ChatRole
-import org.speaksimpleapp.feature.chat.presentation.ChatComponent
+import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent
+import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent
+import org.speaksimpleapp.feature.chat.presentation.ChatContent
 
 @Preview
 @Composable
-private fun ChatScreenLightPreview() {
+private fun ChatContentLightPreview() {
     PreviewTheme(darkTheme = false) {
-        ChatScreen(
-            state = previewState(),
+        ChatContent(
+            messagesState = previewMessagesState(),
+            inputState = previewInputState(),
             news = emptyFlow(),
             onMessageChanged = {},
             onSendClicked = {},
@@ -28,10 +31,11 @@ private fun ChatScreenLightPreview() {
 
 @Preview
 @Composable
-private fun ChatScreenDarkPreview() {
+private fun ChatContentDarkPreview() {
     PreviewTheme(darkTheme = true) {
-        ChatScreen(
-            state = previewState(),
+        ChatContent(
+            messagesState = previewMessagesState(),
+            inputState = previewInputState(),
             news = emptyFlow(),
             onMessageChanged = {},
             onSendClicked = {},
@@ -40,44 +44,58 @@ private fun ChatScreenDarkPreview() {
     }
 }
 
-private fun previewState(): ChatComponent.UiState =
-    ChatComponent.UiState(
-        inputMessage = "Can you help me?",
+private fun previewMessagesState(): ChatMessagesComponent.UiState =
+    ChatMessagesComponent.UiState(
         messages = listOf(
             ChatMessage(
                 id = "1",
                 role = ChatRole.Assistant,
-                text = "Hi! Send me a message in English, and I will help you make it sound more natural."
+                text = "Hi! Send me a message in English, and I will help you make it sound more natural.",
+                feedback = null
             ),
             ChatMessage(
                 id = "2",
                 role = ChatRole.User,
-                text = "I want improve my speaking"
+                text = "I want improve my speaking",
+                feedback = null
             ),
             ChatMessage(
                 id = "3",
                 role = ChatRole.Assistant,
-                text = "Got it. You can say this more naturally by adding a verb form and a little context."
-            )
-        ),
-        feedback = ChatFeedback(
-            improvedText = "I want to improve my speaking skills.",
-            explanation = "Use \"want to\" before a verb and add a noun like \"skills\" to make the sentence complete.",
-            suggestions = listOf(
-                "Add \"to\" after want.",
-                "Say what skill you want to improve.",
-                "Add context if you can."
+                text = "Got it. You can say this more naturally by adding a verb form and a little context.",
+                feedback = null
             ),
-            constructions = listOf(
-                "I want to improve...",
-                "I am trying to...",
-                "Could you help me with..."
+            ChatMessage(
+                id = "4",
+                role = ChatRole.Feedback,
+                text = "",
+                feedback = ChatFeedback(
+                    improvedText = "I want to improve my speaking skills.",
+                    explanation = "Use \"want to\" before a verb and add a noun like \"skills\" to make the sentence complete.",
+                    suggestions = listOf(
+                        "Add \"to\" after want.",
+                        "Say what skill you want to improve.",
+                        "Add context if you can."
+                    ),
+                    constructions = listOf(
+                        "I want to improve...",
+                        "I am trying to...",
+                        "Could you help me with..."
+                    )
+                )
             )
         ),
         isInitialLoading = false,
         isPreviousLoading = false,
         hasMorePrevious = true,
-        isSending = false
+        previousPageKey = "1"
+    )
+
+private fun previewInputState(): ChatInputComponent.UiState =
+    ChatInputComponent.UiState(
+        message = "Can you help me?",
+        isSending = false,
+        canSend = true
     )
 
 @Composable

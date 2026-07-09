@@ -10,24 +10,24 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
 
-abstract class BaseViewModel(
+abstract class BaseModel(
     coroutineDispatchers: CoroutineDispatchers
 ) : InstanceKeeper.Instance {
 
-    protected val viewModelScope: CoroutineScope = CoroutineScope(
+    protected val modelScope: CoroutineScope = CoroutineScope(
         coroutineDispatchers.main + SupervisorJob()
     )
 
     final override fun onDestroy() {
         onCleared()
-        viewModelScope.cancel()
+        modelScope.cancel()
     }
 
     protected fun <T, R> StateFlow<T>.mapState(
         transform: (T) -> R
     ): StateFlow<R> =
         map(transform).stateIn(
-            scope = viewModelScope,
+            scope = modelScope,
             started = SharingStarted.Eagerly,
             initialValue = transform(value)
         )

@@ -1,31 +1,33 @@
 package org.speaksimpleapp.feature.chat.presentation
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.essenty.instancekeeper.getOrCreate
-import kotlinx.coroutines.flow.StateFlow
+import com.arkivanov.decompose.childContext
+import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent
+import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent
 
 internal class DefaultChatComponent(
     componentContext: ComponentContext,
-    chatViewModelFactory: ChatViewModel.Factory
+    chatMessagesComponentFactory: ChatMessagesComponent.Factory,
+    chatInputComponentFactory: ChatInputComponent.Factory
 ) : ChatComponent, ComponentContext by componentContext {
 
-    private val viewModel: ChatViewModel = instanceKeeper.getOrCreate {
-        chatViewModelFactory()
-    }
-
-    override val uiState: StateFlow<ChatComponent.UiState> = viewModel.uiState
-    override val news = viewModel.news
-
-    override fun dispatch(uiEvent: ChatComponent.Event) = viewModel.dispatch(uiEvent)
+    override val messages: ChatMessagesComponent = chatMessagesComponentFactory(
+        componentContext = childContext("MESSAGES")
+    )
+    override val input: ChatInputComponent = chatInputComponentFactory(
+        componentContext = childContext("INPUT")
+    )
 
     class Factory(
-        private val chatViewModelFactory: ChatViewModel.Factory,
+        private val chatMessagesComponentFactory: ChatMessagesComponent.Factory,
+        private val chatInputComponentFactory: ChatInputComponent.Factory
     ) : ChatComponent.Factory {
 
         override fun invoke(componentContext: ComponentContext): ChatComponent =
             DefaultChatComponent(
                 componentContext = componentContext,
-                chatViewModelFactory = chatViewModelFactory
+                chatMessagesComponentFactory = chatMessagesComponentFactory,
+                chatInputComponentFactory = chatInputComponentFactory
             )
     }
 }
