@@ -4,11 +4,6 @@
     <string name="chat_subtitle">Text practice now. Voice messages come next.</string>
     <string name="chat_avatar_text">S</string>
     <string name="chat_loading_previous_messages">Loading previous messages...</string>
-    <string name="chat_coach_note">Coach note</string>
-    <string name="chat_more_natural">More natural</string>
-    <string name="chat_why">Why</string>
-    <string name="chat_try">Try</string>
-    <string name="chat_phrases">Phrases</string>
     <string name="chat_message_placeholder">Message</string>
     <string name="chat_sending">...</string>
     <string name="chat_send">></string>

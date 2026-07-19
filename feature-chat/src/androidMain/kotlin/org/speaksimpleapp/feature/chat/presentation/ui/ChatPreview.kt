@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.flow.emptyFlow
-import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
 import org.speaksimpleapp.feature.chat.domain.model.ChatRole
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent
@@ -50,39 +49,22 @@ private fun previewMessagesState(): ChatMessagesComponent.UiState =
             ChatMessage(
                 id = "1",
                 role = ChatRole.Assistant,
-                text = "Hi! Send me a message in English, and I will help you make it sound more natural.",
-                feedback = null
+                text = "Hi! Send me a message in English, and I will help you make it sound more natural."
             ),
             ChatMessage(
                 id = "2",
                 role = ChatRole.User,
-                text = "I want improve my speaking",
-                feedback = null
+                text = "I want improve my speaking"
             ),
             ChatMessage(
                 id = "3",
                 role = ChatRole.Assistant,
-                text = "Got it. You can say this more naturally by adding a verb form and a little context.",
-                feedback = null
+                text = "Got it. You can say this more naturally by adding a verb form and a little context."
             ),
             ChatMessage(
                 id = "4",
                 role = ChatRole.Feedback,
-                text = "",
-                feedback = ChatFeedback(
-                    improvedText = "I want to improve my speaking skills.",
-                    explanation = "Use \"want to\" before a verb and add a noun like \"skills\" to make the sentence complete.",
-                    suggestions = listOf(
-                        "Add \"to\" after want.",
-                        "Say what skill you want to improve.",
-                        "Add context if you can."
-                    ),
-                    constructions = listOf(
-                        "I want to improve...",
-                        "I am trying to...",
-                        "Could you help me with..."
-                    )
-                )
+                text = "More natural: I want to improve my speaking skills.\n\nWhy: Use \"want to\" before a verb and add a noun like \"skills\" to make the sentence complete."
             )
         ),
         isInitialLoading = false,

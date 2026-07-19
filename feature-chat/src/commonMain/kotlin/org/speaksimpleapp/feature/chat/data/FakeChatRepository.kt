@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import org.speaksimpleapp.feature.chat.domain.model.ChatFeedback
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessages
 import org.speaksimpleapp.feature.chat.domain.model.ChatRequest
@@ -56,8 +55,7 @@ internal class FakeChatRepository : ChatRepository {
         val userMessage = ChatMessage(
             id = "user-${localMessagesState.value.orEmpty().messages.size}",
             role = ChatRole.User,
-            text = text,
-            feedback = null
+            text = text
         )
 
         localMessagesState.update { messages ->
@@ -72,21 +70,7 @@ internal class FakeChatRepository : ChatRepository {
 
         val improved = improve(text)
         val answer = "Got it. I understood: \"$text\". Try adding one detail or asking a follow-up question to keep the conversation natural."
-        val feedback = ChatFeedback(
-            improvedText = improved,
-            explanation = "Your idea is understandable. A natural English message usually adds a little context and uses a softer phrase before the main point.",
-            suggestions = listOf(
-                "Add context: time, reason, place, or feeling.",
-                "Use a soft opener like \"I was wondering...\".",
-                "Make the message one complete sentence."
-            ),
-            constructions = listOf(
-                "I was wondering if...",
-                "What I mean is...",
-                "It would be great to...",
-                "Could you tell me more about..."
-            )
-        )
+        val feedback = "More natural: $improved\n\nWhy: Your idea is understandable. To sound more natural, add a little context and use a softer phrase before the main point."
 
         localMessagesState.update { messages ->
             val currentMessages = messages.orEmpty()
@@ -95,14 +79,12 @@ internal class FakeChatRepository : ChatRepository {
                     ChatMessage(
                         id = "assistant-${currentMessages.messages.size}",
                         role = ChatRole.Assistant,
-                        text = answer,
-                        feedback = null
+                        text = answer
                     ),
                     ChatMessage(
                         id = "feedback-${currentMessages.messages.size + 1}",
                         role = ChatRole.Feedback,
-                        text = "",
-                        feedback = feedback
+                        text = feedback
                     )
                 )
             )
@@ -128,22 +110,19 @@ internal class FakeChatRepository : ChatRepository {
             messages += ChatMessage(
                 id = "history-user-$number",
                 role = ChatRole.User,
-                text = sampleUserMessage(number),
-                feedback = null
+                text = sampleUserMessage(number)
             )
             messages += ChatMessage(
                 id = "history-assistant-$number",
                 role = ChatRole.Assistant,
-                text = sampleAssistantMessage(number),
-                feedback = null
+                text = sampleAssistantMessage(number)
             )
         }
 
         messages += ChatMessage(
             id = "welcome-1",
             role = ChatRole.Assistant,
-            text = "Hi! Send me a message in English, and I will help you make it sound more natural.",
-            feedback = null
+            text = "Hi! Send me a message in English, and I will help you make it sound more natural."
         )
 
         return messages

@@ -34,8 +34,7 @@ class ChatMessagesStateMapperTest {
                         ChatMessage(
                             id = "1",
                             role = ChatRole.Assistant,
-                            text = "Hi",
-                            feedback = null
+                            text = "Hi"
                         )
                     ),
                     oldestMessageId = "1",
@@ -55,7 +54,6 @@ class ChatMessagesStateMapperTest {
         ChatMessage(
             id = id,
             role = ChatRole.Assistant,
-            text = "Hi",
-            feedback = null
+            text = "Hi"
         )
 }

@@ -39,7 +39,8 @@ class ChatInputModelTest {
         assertFalse(inputState.isSending)
         assertEquals("Hello", messagesState.messages[messagesState.messages.lastIndex - 2].text)
         assertTrue(messagesState.messages[messagesState.messages.lastIndex - 1].text.contains("Got it"))
-        assertTrue(messagesState.messages.last().role == ChatRole.Feedback)
+        assertEquals(ChatRole.Feedback, messagesState.messages.last().role)
+        assertTrue(messagesState.messages.last().text.contains("More natural"))
     }
 
     @Test
