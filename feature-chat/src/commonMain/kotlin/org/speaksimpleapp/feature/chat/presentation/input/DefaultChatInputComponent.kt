@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
 import org.speaksimpleapp.core.common.presentation.BaseModel
+import org.speaksimpleapp.feature.chat.domain.model.ChatId
+import org.speaksimpleapp.feature.chat.domain.model.MessageInputType
+import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
 import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent.Event
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent.UiState
@@ -49,14 +52,24 @@ internal class ChatInputModel(
 
     fun dispatch(event: Event) {
         when (event) {
-            is Event.MessageChanged -> onMessageChanged(event.message)
-            is Event.SendClicked -> onSendClicked()
+            is Event.MessageChanged -> onMessageChanged(event)
+            is Event.ChatChanged -> onChatChanged(event)
+            Event.SendClicked -> onSendClicked()
         }
     }
 
-    private fun onMessageChanged(message: String) {
+    private fun onMessageChanged(event: Event.MessageChanged) {
         dataState.update {
-            it.copy(message = message)
+            it.copy(message = event.message)
+        }
+    }
+
+    private fun onChatChanged(event: Event.ChatChanged) {
+        dataState.update {
+            it.copy(
+                chatId = event.chatId,
+                sendingAvailability = event.sendingAvailability,
+            )
         }
     }
 
@@ -64,7 +77,12 @@ internal class ChatInputModel(
         modelScope.launch {
             val current = dataState.value
             val text = current.message.trim()
-            if (text.isEmpty() || current.isSending) return@launch
+            val chatId = current.chatId ?: return@launch
+            if (
+                text.isEmpty() ||
+                current.isSending ||
+                current.sendingAvailability == MessageSendingAvailability.LimitReached
+            ) return@launch
 
             dataState.update {
                 it.copy(
@@ -73,7 +91,9 @@ internal class ChatInputModel(
                 )
             }
             sendChatMessageUseCase(
-                text = text
+                chatId = chatId,
+                text = text,
+                inputType = MessageInputType.TEXT,
             )
 
             dataState.update {
@@ -84,7 +104,9 @@ internal class ChatInputModel(
 
     data class DataState(
         val message: String = "",
-        val isSending: Boolean = false
+        val isSending: Boolean = false,
+        val chatId: ChatId? = null,
+        val sendingAvailability: MessageSendingAvailability? = null,
     )
 
     class Factory(

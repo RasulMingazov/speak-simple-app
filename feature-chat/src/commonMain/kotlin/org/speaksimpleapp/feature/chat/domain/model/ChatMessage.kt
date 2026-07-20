@@ -1,13 +1,31 @@
 package org.speaksimpleapp.feature.chat.domain.model
 
-data class ChatMessage(
-    val id: String,
-    val role: ChatRole,
-    val text: String,
-)
+import kotlin.time.Instant
 
-enum class ChatRole {
-    Assistant,
-    User,
-    Feedback,
+data class ChatMessage(
+    val id: MessageId,
+    val chatId: ChatId,
+    val clientMessageId: ClientMessageId?,
+    val author: MessageAuthor,
+    val text: String,
+    val inputType: MessageInputType,
+    val createdAt: Instant,
+    val suggestionCount: Int,
+) {
+    init {
+        require(text.isNotBlank())
+        require(suggestionCount >= 0)
+        require((author == MessageAuthor.USER) == (clientMessageId != null))
+    }
+}
+
+enum class MessageAuthor {
+    USER,
+    ASSISTANT,
+    SYSTEM,
+}
+
+enum class MessageInputType {
+    TEXT,
+    VOICE_TRANSCRIPT,
 }

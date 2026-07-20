@@ -3,8 +3,8 @@ package org.speaksimpleapp.feature.chat.di
 import org.speaksimpleapp.core.common.coroutines.DefaultCoroutineDispatchers
 import org.speaksimpleapp.feature.chat.data.FakeChatRepository
 import org.speaksimpleapp.feature.chat.domain.repository.ChatRepository
-import org.speaksimpleapp.feature.chat.domain.usecase.LoadChatMessagesUseCase
-import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatMessagesUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.GetChatUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
 import org.speaksimpleapp.feature.chat.presentation.ChatComponent
 import org.speaksimpleapp.feature.chat.presentation.DefaultChatComponent
@@ -19,12 +19,12 @@ class DefaultChatContainer : ChatContainer {
         FakeChatRepository()
     }
 
-    private val loadChatMessagesUseCase: LoadChatMessagesUseCase by lazy {
-        LoadChatMessagesUseCase(chatRepository)
+    private val getChatUseCase: GetChatUseCase by lazy {
+        GetChatUseCase(chatRepository)
     }
 
-    private val observeChatMessagesUseCase: ObserveChatMessagesUseCase by lazy {
-        ObserveChatMessagesUseCase(chatRepository)
+    private val observeChatUseCase: ObserveChatUseCase by lazy {
+        ObserveChatUseCase(chatRepository)
     }
 
     private val sendChatMessageUseCase: SendChatMessageUseCase by lazy {
@@ -32,8 +32,8 @@ class DefaultChatContainer : ChatContainer {
     }
 
     private val chatMessagesModelFactory = ChatMessagesModel.Factory(
-        loadChatMessagesUseCase = loadChatMessagesUseCase,
-        observeChatMessagesUseCase = observeChatMessagesUseCase,
+        getChatUseCase = getChatUseCase,
+        observeChatUseCase = observeChatUseCase,
         coroutineDispatchers = DefaultCoroutineDispatchers
     )
 

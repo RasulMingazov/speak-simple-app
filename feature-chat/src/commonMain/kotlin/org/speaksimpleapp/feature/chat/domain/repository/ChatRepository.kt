@@ -1,17 +1,14 @@
 package org.speaksimpleapp.feature.chat.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessages
-import org.speaksimpleapp.feature.chat.domain.model.ChatRequest
+import org.speaksimpleapp.feature.chat.domain.model.ChatSnapshot
+import org.speaksimpleapp.feature.chat.domain.model.SendMessageCommand
+import org.speaksimpleapp.feature.chat.domain.model.SendMessageResult
 
 interface ChatRepository {
-    fun observeMessages(): Flow<ChatMessages?>
+    fun observeChat(): Flow<ChatSnapshot?>
 
-    suspend fun loadMessages(
-        beforeMessageId: String?,
-        limit: Int,
-        forceUpdate: Boolean
-    )
+    suspend fun getChat(forceUpdate: Boolean)
 
-    suspend fun sendMessage(request: ChatRequest)
+    suspend fun sendMessage(command: SendMessageCommand): SendMessageResult
 }

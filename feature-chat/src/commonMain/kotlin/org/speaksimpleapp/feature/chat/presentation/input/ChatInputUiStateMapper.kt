@@ -1,5 +1,6 @@
 package org.speaksimpleapp.feature.chat.presentation.input
 
+import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputModel.DataState
 
 internal interface ChatInputUiStateMapper {
@@ -11,6 +12,11 @@ internal object DefaultChatInputUiStateMapper : ChatInputUiStateMapper {
         ChatInputComponent.UiState(
             message = dataState.message,
             isSending = dataState.isSending,
-            canSend = dataState.message.isNotBlank() && !dataState.isSending
+            canSend = dataState.message.isNotBlank() &&
+                !dataState.isSending &&
+                dataState.chatId != null &&
+                dataState.sendingAvailability != MessageSendingAvailability.LimitReached,
+            isLimitReached = dataState.sendingAvailability == MessageSendingAvailability.LimitReached &&
+                !dataState.isSending,
         )
 }

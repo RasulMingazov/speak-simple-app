@@ -6,10 +6,12 @@ appVersionCode = "1"
 appVersionName = "1.0"
 composeMultiplatform = "1.11.1"
 composeMaterial3 = "1.9.0"
+composeMaterialIcons = "1.7.3"
 compileSdk = "36"
 coreKtx = "1.17.0"
 decompose = "3.0.0-alpha04"
 essenty = "2.0.0-alpha02"
+haze = "1.7.2"
 espressoCore = "3.7.0"
 java = "17"
 junit = "4.13.2"
@@ -34,6 +36,8 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "composeMaterial3" }
+compose-material-icons-core = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "composeMaterialIcons" }
+compose-material-icons-extended = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "composeMaterialIcons" }
 compose-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "composeMultiplatform" }
 compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
 compose-ui-tooling-preview = { group = "org.jetbrains.compose.components", name = "components-ui-tooling-preview", version.ref = "composeMultiplatform" }
@@ -41,6 +45,7 @@ compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "c
 decompose = { group = "com.arkivanov.decompose", name = "decompose", version.ref = "decompose" }
 decompose-extensions-compose = { group = "com.arkivanov.decompose", name = "extensions-compose", version.ref = "decompose" }
 essenty-instance-keeper = { group = "com.arkivanov.essenty", name = "instance-keeper", version.ref = "essenty" }
+haze = { group = "dev.chrisbanes.haze", name = "haze", version.ref = "haze" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }

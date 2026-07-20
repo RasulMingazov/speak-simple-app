@@ -1,122 +1,101 @@
 package org.speaksimpleapp.feature.chat.presentation.ui
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
-import org.speaksimpleapp.feature.chat.domain.model.ChatRole
+import kotlinx.coroutines.flow.StateFlow
+import org.speaksimpleapp.core.design.theme.SpeakSimpleTheme
+import org.speaksimpleapp.feature.chat.domain.model.ChatId
+import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
+import org.speaksimpleapp.feature.chat.presentation.ChatContent
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent
 import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent
-import org.speaksimpleapp.feature.chat.presentation.ChatContent
 
-@Preview
+@Preview(name = "Light", uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ChatContentLightPreview() {
-    PreviewTheme(darkTheme = false) {
+private fun ChatContentPreview() {
+    SpeakSimpleTheme {
         ChatContent(
-            messagesState = previewMessagesState(),
-            inputState = previewInputState(),
-            news = emptyFlow(),
-            onMessageChanged = {},
-            onSendClicked = {},
-            onLoadPreviousMessages = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ChatContentDarkPreview() {
-    PreviewTheme(darkTheme = true) {
-        ChatContent(
-            messagesState = previewMessagesState(),
-            inputState = previewInputState(),
-            news = emptyFlow(),
-            onMessageChanged = {},
-            onSendClicked = {},
-            onLoadPreviousMessages = {}
+            messagesComponent = PreviewMessagesComponent,
+            inputComponent = PreviewInputComponent,
         )
     }
 }
 
 private fun previewMessagesState(): ChatMessagesComponent.UiState =
     ChatMessagesComponent.UiState(
-        messages = listOf(
-            ChatMessage(
+        chatId = PreviewChatId,
+        title = "Weekend plans",
+        messageItems = listOf(
+            previewMessage(
                 id = "1",
-                role = ChatRole.Assistant,
-                text = "Hi! Send me a message in English, and I will help you make it sound more natural."
+                type = ChatMessagesComponent.MessageType.Assistant,
+                text = "You just finished a team call. Try asking a colleague how their week is going.",
             ),
-            ChatMessage(
+            previewMessage(
                 id = "2",
-                role = ChatRole.User,
-                text = "I want improve my speaking"
+                type = ChatMessagesComponent.MessageType.User,
+                text = "How is your week going so far?",
+                suggestionCount = 2,
             ),
-            ChatMessage(
+            previewMessage(
                 id = "3",
-                role = ChatRole.Assistant,
-                text = "Got it. You can say this more naturally by adding a verb form and a little context."
+                type = ChatMessagesComponent.MessageType.Assistant,
+                text = "Pretty good, thanks. It’s been a busy week, but I finally wrapped up a project. How about you?",
             ),
-            ChatMessage(
+            previewMessage(
                 id = "4",
-                role = ChatRole.Feedback,
-                text = "More natural: I want to improve my speaking skills.\n\nWhy: Use \"want to\" before a verb and add a noun like \"skills\" to make the sentence complete."
-            )
+                type = ChatMessagesComponent.MessageType.User,
+                text = "It has been busy, but I’m learning a lot from the new project.",
+                suggestionCount = 1,
+            ),
+            previewMessage(
+                id = "5",
+                type = ChatMessagesComponent.MessageType.Assistant,
+                text = "That sounds productive. What part of the new project has been the most interesting so far?",
+            ),
         ),
+        assistantTypingKey = null,
+        sendingAvailability = MessageSendingAvailability.Available(messagesBeforeWarning = 98),
         isInitialLoading = false,
-        isPreviousLoading = false,
-        hasMorePrevious = true,
-        previousPageKey = "1"
     )
 
 private fun previewInputState(): ChatInputComponent.UiState =
     ChatInputComponent.UiState(
-        message = "Can you help me?",
+        message = "",
         isSending = false,
-        canSend = true
+        canSend = false,
+        isLimitReached = false,
     )
 
-@Composable
-private fun PreviewTheme(
-    darkTheme: Boolean,
-    content: @Composable () -> Unit
-) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) darkPreviewColors() else lightPreviewColors(),
-        content = content
-    )
+private fun previewMessage(
+    id: String,
+    type: ChatMessagesComponent.MessageType,
+    text: String,
+    suggestionCount: Int = 0,
+): ChatMessagesComponent.MessageItem = ChatMessagesComponent.MessageItem(
+    key = id,
+    text = text,
+    type = type,
+    suggestionCount = suggestionCount,
+    animateAppearance = false,
+)
+
+private val PreviewChatId = ChatId("preview-chat")
+
+private object PreviewMessagesComponent : ChatMessagesComponent {
+    override val uiState: StateFlow<ChatMessagesComponent.UiState> =
+        MutableStateFlow(previewMessagesState())
+    override val news: Flow<ChatMessagesComponent.News> = emptyFlow()
 }
 
-private fun lightPreviewColors() = lightColorScheme(
-    primary = Color(0xFF7652D6),
-    onPrimary = Color.White,
-    secondary = Color(0xFF967A00),
-    background = Color(0xFFFCFBFF),
-    onBackground = Color(0xFF181521),
-    surface = Color.White,
-    onSurface = Color(0xFF181521),
-    surfaceVariant = Color(0xFFF0EDF7),
-    onSurfaceVariant = Color(0xFF625B70),
-    primaryContainer = Color(0xFFE5D9FF),
-    secondaryContainer = Color(0xFFFFEDB7),
-    outline = Color(0xFFE0DAEA)
-)
+private object PreviewInputComponent : ChatInputComponent {
+    override val uiState: StateFlow<ChatInputComponent.UiState> =
+        MutableStateFlow(previewInputState())
 
-private fun darkPreviewColors() = darkColorScheme(
-    primary = Color(0xFFBFA2FF),
-    onPrimary = Color(0xFF201632),
-    secondary = Color(0xFFFFD66B),
-    background = Color(0xFF111116),
-    onBackground = Color(0xFFF6F3FB),
-    surface = Color(0xFF17171E),
-    onSurface = Color(0xFFF6F3FB),
-    surfaceVariant = Color(0xFF25242C),
-    onSurfaceVariant = Color(0xFFB9B4C2),
-    primaryContainer = Color(0xFF3B2A59),
-    secondaryContainer = Color(0xFF37301D),
-    outline = Color(0xFF34323D)
-)
+    override fun dispatch(event: ChatInputComponent.Event) = Unit
+}

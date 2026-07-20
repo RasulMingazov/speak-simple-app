@@ -4,150 +4,179 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlin.time.Instant
+import org.speaksimpleapp.feature.chat.domain.model.AssistantReplyResult
+import org.speaksimpleapp.feature.chat.domain.model.Chat
+import org.speaksimpleapp.feature.chat.domain.model.ChatId
 import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessages
-import org.speaksimpleapp.feature.chat.domain.model.ChatRequest
-import org.speaksimpleapp.feature.chat.domain.model.ChatRole
+import org.speaksimpleapp.feature.chat.domain.model.ChatSnapshot
+import org.speaksimpleapp.feature.chat.domain.model.ChatStatus
+import org.speaksimpleapp.feature.chat.domain.model.ChatUsage
+import org.speaksimpleapp.feature.chat.domain.model.ClientMessageId
+import org.speaksimpleapp.feature.chat.domain.model.DefaultChatMessageLimit
+import org.speaksimpleapp.feature.chat.domain.model.MessageAuthor
+import org.speaksimpleapp.feature.chat.domain.model.MessageId
+import org.speaksimpleapp.feature.chat.domain.model.MessageInputType
+import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
+import org.speaksimpleapp.feature.chat.domain.model.SendMessageCommand
+import org.speaksimpleapp.feature.chat.domain.model.SendMessageResult
 import org.speaksimpleapp.feature.chat.domain.repository.ChatRepository
 
 internal class FakeChatRepository : ChatRepository {
 
-    private val history: List<ChatMessage> = buildHistory()
-    private val localMessagesState = MutableStateFlow<ChatMessages?>(null)
+    private val chatState = MutableStateFlow<ChatSnapshot?>(null)
+    private var nextMessageNumber = InitialMessages.size + 1
 
-    override fun observeMessages(): Flow<ChatMessages?> =
-        localMessagesState.asStateFlow()
+    override fun observeChat(): Flow<ChatSnapshot?> = chatState.asStateFlow()
 
-    override suspend fun loadMessages(
-        beforeMessageId: String?,
-        limit: Int,
-        forceUpdate: Boolean
-    ) {
-        if (forceUpdate) {
-            delay(650)
-        }
-
-        val endIndex = beforeMessageId
-            ?.let { cursor -> history.indexOfFirst { it.id == cursor } }
-            ?.takeIf { it >= 0 }
-            ?: history.size
-        val startIndex = (endIndex - limit).coerceAtLeast(0)
-        val messages = history.subList(startIndex, endIndex)
-
-        localMessagesState.update { currentMessages ->
-            val updatedMessages = if (beforeMessageId == null) {
-                messages
-            } else {
-                (messages + currentMessages.orEmpty().messages).distinctBy(ChatMessage::id)
-            }
-
-            ChatMessages(
-                messages = updatedMessages,
-                oldestMessageId = messages.firstOrNull()?.id ?: currentMessages?.oldestMessageId,
-                hasMorePrevious = startIndex > 0
-            )
-        }
+    override suspend fun getChat(forceUpdate: Boolean) {
+        if (forceUpdate) delay(ChatLoadingDelayMillis)
+        if (chatState.value == null) chatState.value = InitialSnapshot
     }
 
-    override suspend fun sendMessage(request: ChatRequest) {
-        val text = request.text.trim()
+    override suspend fun sendMessage(command: SendMessageCommand): SendMessageResult {
+        val snapshot = requireNotNull(chatState.value)
+        check(snapshot.chat.id == command.chatId)
+        check(snapshot.sendingAvailability != MessageSendingAvailability.LimitReached)
+
         val userMessage = ChatMessage(
-            id = "user-${localMessagesState.value.orEmpty().messages.size}",
-            role = ChatRole.User,
-            text = text
+            id = nextMessageId(MessageAuthor.USER),
+            chatId = command.chatId,
+            clientMessageId = command.clientMessageId,
+            author = MessageAuthor.USER,
+            text = command.text.trim(),
+            inputType = command.inputType,
+            createdAt = nextCreatedAt(),
+            suggestionCount = 0,
+        )
+        val updatedUsage = ChatUsage(
+            acceptedUserMessageCount = snapshot.usage.acceptedUserMessageCount + 1,
         )
 
-        localMessagesState.update { messages ->
-            ChatMessages(
-                messages = messages.orEmpty().messages + userMessage,
-                oldestMessageId = messages?.oldestMessageId,
-                hasMorePrevious = messages?.hasMorePrevious ?: false
-            )
-        }
-
-        delay(900)
-
-        val improved = improve(text)
-        val answer = "Got it. I understood: \"$text\". Try adding one detail or asking a follow-up question to keep the conversation natural."
-        val feedback = "More natural: $improved\n\nWhy: Your idea is understandable. To sound more natural, add a little context and use a softer phrase before the main point."
-
-        localMessagesState.update { messages ->
-            val currentMessages = messages.orEmpty()
-            currentMessages.copy(
-                messages = currentMessages.messages + listOf(
-                    ChatMessage(
-                        id = "assistant-${currentMessages.messages.size}",
-                        role = ChatRole.Assistant,
-                        text = answer
-                    ),
-                    ChatMessage(
-                        id = "feedback-${currentMessages.messages.size + 1}",
-                        role = ChatRole.Feedback,
-                        text = feedback
-                    )
-                )
-            )
-        }
-    }
-
-    private fun improve(text: String): String {
-        if (text.isBlank()) return text
-
-        val normalized = text.replaceFirstChar { char ->
-            if (char.isLowerCase()) char.titlecase() else char.toString()
-        }
-        val punctuated = if (normalized.last() in ".!?") normalized else "$normalized."
-
-        return "I was wondering, $punctuated Could you tell me more about it?"
-    }
-
-    private fun buildHistory(): List<ChatMessage> {
-        val messages = mutableListOf<ChatMessage>()
-
-        repeat(18) { index ->
-            val number = index + 1
-            messages += ChatMessage(
-                id = "history-user-$number",
-                role = ChatRole.User,
-                text = sampleUserMessage(number)
-            )
-            messages += ChatMessage(
-                id = "history-assistant-$number",
-                role = ChatRole.Assistant,
-                text = sampleAssistantMessage(number)
-            )
-        }
-
-        messages += ChatMessage(
-            id = "welcome-1",
-            role = ChatRole.Assistant,
-            text = "Hi! Send me a message in English, and I will help you make it sound more natural."
+        chatState.value = snapshot.copy(
+            messages = snapshot.messages + userMessage,
+            usage = updatedUsage,
         )
 
-        return messages
+        delay(AssistantReplyDelayMillis)
+
+        val analyzedUserMessage = userMessage.copy(
+            suggestionCount = suggestionCount(command.text),
+        )
+        val assistantMessage = ChatMessage(
+            id = nextMessageId(MessageAuthor.ASSISTANT),
+            chatId = command.chatId,
+            clientMessageId = null,
+            author = MessageAuthor.ASSISTANT,
+            text = createContextualAnswer(command.text),
+            inputType = MessageInputType.TEXT,
+            createdAt = nextCreatedAt(),
+            suggestionCount = 0,
+        )
+
+        val currentSnapshot = requireNotNull(chatState.value)
+        chatState.value = currentSnapshot.copy(
+            messages = currentSnapshot.messages.map { message ->
+                if (message.id == userMessage.id) analyzedUserMessage else message
+            } + assistantMessage,
+            usage = updatedUsage,
+        )
+
+        return SendMessageResult(
+            userMessage = analyzedUserMessage,
+            assistantReply = AssistantReplyResult.Success(assistantMessage),
+            usage = updatedUsage,
+            messageLimit = snapshot.messageLimit,
+        )
     }
 
-    private fun sampleUserMessage(number: Int): String =
-        when (number % 4) {
-            0 -> "I want explain my idea about work."
-            1 -> "Can you help me write this more natural?"
-            2 -> "Yesterday I speak with my friend about travel."
-            else -> "I need ask manager about deadline."
-        }
+    private fun nextMessageId(author: MessageAuthor): MessageId =
+        MessageId("${author.name.lowercase()}-${nextMessageNumber++}")
 
-    private fun sampleAssistantMessage(number: Int): String =
-        when (number % 4) {
-            0 -> "Sure. You could say: I would like to explain my idea about work in a clearer way."
-            1 -> "Of course. Try adding the situation and the tone you want: casual, polite, or confident."
-            2 -> "Nice. A more natural version is: Yesterday I talked with my friend about traveling."
-            else -> "You can make it softer: Could you let me know what the deadline is?"
-        }
-
-    private fun ChatMessages?.orEmpty(): ChatMessages =
-        this ?: ChatMessages(
-            messages = emptyList(),
-            oldestMessageId = null,
-            hasMorePrevious = false
-        )
+    private fun nextCreatedAt(): Instant =
+        Instant.fromEpochMilliseconds(BaseTimestampMillis + nextMessageNumber * 1_000L)
 }
+
+private val ChatIdValue = ChatId("weekend-plans")
+private val BaseCreatedAt = Instant.parse("2026-07-19T09:00:00Z")
+
+private val InitialMessages = listOf(
+    chatMessage(
+        id = "assistant-1",
+        author = MessageAuthor.ASSISTANT,
+        text = "You just finished a team call. Try asking a colleague how their week is going.",
+    ),
+    chatMessage(
+        id = "user-2",
+        author = MessageAuthor.USER,
+        text = "How is your week going so far?",
+        suggestionCount = 2,
+    ),
+    chatMessage(
+        id = "assistant-3",
+        author = MessageAuthor.ASSISTANT,
+        text = "Pretty good, thanks. It’s been a busy week, but I finally wrapped up a project. How about you?",
+    ),
+    chatMessage(
+        id = "user-4",
+        author = MessageAuthor.USER,
+        text = "It has been busy, but I’m learning a lot from the new project.",
+        suggestionCount = 1,
+    ),
+    chatMessage(
+        id = "assistant-5",
+        author = MessageAuthor.ASSISTANT,
+        text = "That sounds productive. What part of the new project has been the most interesting so far?",
+    ),
+)
+
+private val InitialSnapshot = ChatSnapshot(
+    chat = Chat(
+        id = ChatIdValue,
+        title = "Weekend plans",
+        status = ChatStatus.ACTIVE,
+        createdAt = BaseCreatedAt,
+        updatedAt = BaseCreatedAt,
+    ),
+    messages = InitialMessages,
+    messageLimit = DefaultChatMessageLimit,
+    usage = ChatUsage(acceptedUserMessageCount = 2),
+)
+
+private fun chatMessage(
+    id: String,
+    author: MessageAuthor,
+    text: String,
+    suggestionCount: Int = 0,
+): ChatMessage = ChatMessage(
+    id = MessageId(id),
+    chatId = ChatIdValue,
+    clientMessageId = if (author == MessageAuthor.USER) {
+        ClientMessageId("client-$id")
+    } else {
+        null
+    },
+    author = author,
+    text = text,
+    inputType = MessageInputType.TEXT,
+    createdAt = BaseCreatedAt,
+    suggestionCount = suggestionCount,
+)
+
+private fun suggestionCount(text: String): Int =
+    if (text.length > LongMessageLength) 2 else 1
+
+private fun createContextualAnswer(text: String): String = when {
+    text.contains("week", ignoreCase = true) ->
+        "Pretty good, thanks. It’s been a busy week, but I finally wrapped up a project. How about you?"
+
+    text.contains("project", ignoreCase = true) ->
+        "That sounds productive. What part of the new project has been the most interesting so far?"
+
+    else -> "That makes sense. Could you tell me a little more about it?"
+}
+
+private const val ChatLoadingDelayMillis = 650L
+private const val AssistantReplyDelayMillis = 900L
+private const val LongMessageLength = 48
+private const val BaseTimestampMillis = 1_752_916_400_000L

@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="chat_title">SpeakSimple Chat</string>
-    <string name="chat_subtitle">Text practice now. Voice messages come next.</string>
+    <string name="chat_title">SpeakSimple</string>
     <string name="chat_avatar_text">S</string>
-    <string name="chat_loading_previous_messages">Loading previous messages...</string>
+    <string name="chat_back">Back</string>
     <string name="chat_message_placeholder">Message</string>
     <string name="chat_sending">...</string>
-    <string name="chat_send">></string>
+    <string name="chat_send">Send message</string>
+    <string name="chat_voice_message">Voice message</string>
+    <string name="chat_limit_reached_title">Conversation complete</string>
+    <string name="chat_limit_reached_message">Start a new chat to keep practicing.</string>
+    <string name="chat_play">Play</string>
+    <string name="chat_translate">Translate</string>
+    <plurals name="chat_suggestions">
+        <item quantity="one">%1$d suggestion</item>
+        <item quantity="other">%1$d suggestions</item>
+    </plurals>
 </resources>

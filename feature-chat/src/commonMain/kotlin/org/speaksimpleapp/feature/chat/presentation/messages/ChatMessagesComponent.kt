@@ -3,30 +3,38 @@ package org.speaksimpleapp.feature.chat.presentation.messages
 import com.arkivanov.decompose.ComponentContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
+import org.speaksimpleapp.feature.chat.domain.model.ChatId
+import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
 
 interface ChatMessagesComponent {
     val uiState: StateFlow<UiState>
     val news: Flow<News>
-
-    fun dispatch(event: Event)
-
-    sealed interface Event {
-        class LoadPreviousMessages(val beforeMessageId: String) : Event
-    }
 
     sealed interface News {
         data object ScrollToBottom : News
     }
 
     data class UiState(
-        val messages: List<ChatMessage>,
+        val chatId: ChatId?,
+        val title: String,
+        val messageItems: List<MessageItem>,
+        val assistantTypingKey: String?,
+        val sendingAvailability: MessageSendingAvailability?,
         val isInitialLoading: Boolean,
-        val isPreviousLoading: Boolean,
-        val hasMorePrevious: Boolean,
-        val previousPageKey: String?
-    ) {
-        val canLoadPrevious: Boolean = previousPageKey != null
+    )
+
+    data class MessageItem(
+        val key: String,
+        val text: String,
+        val type: MessageType,
+        val suggestionCount: Int,
+        val animateAppearance: Boolean,
+    )
+
+    enum class MessageType {
+        User,
+        Assistant,
+        System,
     }
 
     fun interface Factory {
