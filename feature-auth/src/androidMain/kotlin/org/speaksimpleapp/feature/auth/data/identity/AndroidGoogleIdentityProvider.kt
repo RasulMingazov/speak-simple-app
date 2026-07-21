@@ -10,7 +10,7 @@ import kotlinx.coroutines.CancellationException
 import org.speaksimpleapp.feature.auth.data.exception.AuthDataException
 import org.speaksimpleapp.feature.auth.data.platform.AndroidActivityProvider
 
-class AndroidGoogleIdentityProvider(
+internal class AndroidGoogleIdentityProvider(
     private val activityProvider: AndroidActivityProvider,
     private val serverClientId: String,
 ) : GoogleIdentityProvider {

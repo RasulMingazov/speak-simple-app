@@ -2,7 +2,7 @@ package org.speaksimpleapp.feature.auth.domain.usecase
 
 import org.speaksimpleapp.feature.auth.domain.repository.AuthRepository
 
-interface LogoutUseCase {
+internal interface LogoutUseCase {
     suspend operator fun invoke()
 }
 

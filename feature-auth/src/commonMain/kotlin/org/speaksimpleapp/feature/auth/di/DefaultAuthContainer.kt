@@ -6,18 +6,14 @@ import org.speaksimpleapp.feature.auth.data.remote.KtorAuthRemoteDataSource
 import org.speaksimpleapp.feature.auth.data.remote.platformHttpClientEngine
 import org.speaksimpleapp.feature.auth.data.repository.DefaultAuthRepository
 import org.speaksimpleapp.feature.auth.domain.repository.AuthRepository
-import org.speaksimpleapp.feature.auth.domain.usecase.DefaultDeleteAccountUseCase
 import org.speaksimpleapp.feature.auth.domain.usecase.DefaultLoginWithGoogleUseCase
-import org.speaksimpleapp.feature.auth.domain.usecase.DefaultLogoutUseCase
 import org.speaksimpleapp.feature.auth.domain.usecase.DefaultRestoreSessionUseCase
-import org.speaksimpleapp.feature.auth.domain.usecase.DeleteAccountUseCase
-import org.speaksimpleapp.feature.auth.domain.usecase.LogoutUseCase
 import org.speaksimpleapp.feature.auth.domain.usecase.RestoreSessionUseCase
 import org.speaksimpleapp.feature.auth.presentation.DefaultLoginComponent
 import org.speaksimpleapp.feature.auth.presentation.LoginComponent
 import org.speaksimpleapp.feature.auth.presentation.LoginModel
 
-class DefaultAuthContainer(
+internal class DefaultAuthContainer(
     config: AuthRuntimeConfig,
     platform: AuthPlatformDependencies,
 ) : AuthContainer {
@@ -38,10 +34,6 @@ class DefaultAuthContainer(
     )
 
     override val restoreSession: RestoreSessionUseCase = DefaultRestoreSessionUseCase(authRepository)
-
-    override val logout: LogoutUseCase = DefaultLogoutUseCase(authRepository)
-
-    override val deleteAccount: DeleteAccountUseCase = DefaultDeleteAccountUseCase(authRepository)
 
     override val loginComponentFactory: LoginComponent.Factory = DefaultLoginComponent.Factory(
         LoginModel.Factory(

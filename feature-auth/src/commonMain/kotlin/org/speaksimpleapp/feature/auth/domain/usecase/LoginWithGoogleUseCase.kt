@@ -3,7 +3,7 @@ package org.speaksimpleapp.feature.auth.domain.usecase
 import org.speaksimpleapp.feature.auth.domain.entity.LoginResult
 import org.speaksimpleapp.feature.auth.domain.repository.AuthRepository
 
-interface LoginWithGoogleUseCase {
+internal interface LoginWithGoogleUseCase {
     suspend operator fun invoke(): LoginResult
 }
 

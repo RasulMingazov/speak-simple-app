@@ -6,7 +6,7 @@ import org.speaksimpleapp.feature.auth.data.platform.IosAuthPlatformBridge
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-class IosSecureSessionStorage(
+internal class IosSecureSessionStorage(
     private val bridge: IosAuthPlatformBridge,
 ) : SecureSessionStorage {
     override suspend fun read(): String? = suspendCancellableCoroutine { continuation ->

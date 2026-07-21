@@ -12,7 +12,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-class AndroidSecureSessionStorage(context: Context) : SecureSessionStorage {
+internal class AndroidSecureSessionStorage(context: Context) : SecureSessionStorage {
     private val preferences = context.applicationContext.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
 
     override suspend fun read(): String? = withContext(Dispatchers.IO) {

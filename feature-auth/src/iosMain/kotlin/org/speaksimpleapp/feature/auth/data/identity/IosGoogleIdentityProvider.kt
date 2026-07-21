@@ -6,7 +6,7 @@ import org.speaksimpleapp.feature.auth.data.platform.IosAuthPlatformBridge
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-class IosGoogleIdentityProvider(
+internal class IosGoogleIdentityProvider(
     private val bridge: IosAuthPlatformBridge,
 ) : GoogleIdentityProvider {
     override suspend fun signIn(nonce: String): GoogleIdToken? =
