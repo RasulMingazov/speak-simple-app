@@ -1,8 +1,8 @@
-package org.speaksimpleapp.feature.chat.domain.model
+package org.speaksimpleapp.feature.chat.domain.entity
 
 import kotlin.time.Instant
 
-data class ChatMessage(
+internal data class ChatMessage(
     val id: MessageId,
     val chatId: ChatId,
     val clientMessageId: ClientMessageId?,
@@ -17,15 +17,4 @@ data class ChatMessage(
         require(suggestionCount >= 0)
         require((author == MessageAuthor.USER) == (clientMessageId != null))
     }
-}
-
-enum class MessageAuthor {
-    USER,
-    ASSISTANT,
-    SYSTEM,
-}
-
-enum class MessageInputType {
-    TEXT,
-    VOICE_TRANSCRIPT,
 }

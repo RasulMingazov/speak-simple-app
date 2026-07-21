@@ -8,26 +8,26 @@ import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesCompone
 internal class DefaultChatComponent(
     componentContext: ComponentContext,
     chatMessagesComponentFactory: ChatMessagesComponent.Factory,
-    chatInputComponentFactory: ChatInputComponent.Factory
+    chatInputComponentFactory: ChatInputComponent.Factory,
 ) : ChatComponent, ComponentContext by componentContext {
 
     override val messages: ChatMessagesComponent = chatMessagesComponentFactory(
-        componentContext = childContext("MESSAGES")
+        componentContext = childContext("MESSAGES"),
     )
     override val input: ChatInputComponent = chatInputComponentFactory(
-        componentContext = childContext("INPUT")
+        componentContext = childContext("INPUT"),
     )
 
     class Factory(
         private val chatMessagesComponentFactory: ChatMessagesComponent.Factory,
-        private val chatInputComponentFactory: ChatInputComponent.Factory
+        private val chatInputComponentFactory: ChatInputComponent.Factory,
     ) : ChatComponent.Factory {
 
         override fun invoke(componentContext: ComponentContext): ChatComponent =
             DefaultChatComponent(
                 componentContext = componentContext,
                 chatMessagesComponentFactory = chatMessagesComponentFactory,
-                chatInputComponentFactory = chatInputComponentFactory
+                chatInputComponentFactory = chatInputComponentFactory,
             )
     }
 }

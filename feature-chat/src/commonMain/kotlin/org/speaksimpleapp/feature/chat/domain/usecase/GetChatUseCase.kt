@@ -2,10 +2,14 @@ package org.speaksimpleapp.feature.chat.domain.usecase
 
 import org.speaksimpleapp.feature.chat.domain.repository.ChatRepository
 
-class GetChatUseCase(
-    private val chatRepository: ChatRepository,
-) {
-    suspend operator fun invoke(forceUpdate: Boolean) {
-        chatRepository.getChat(forceUpdate = forceUpdate)
+internal interface GetChatUseCase {
+    suspend operator fun invoke(forceUpdate: Boolean)
+}
+
+internal class DefaultGetChatUseCase(
+    private val repository: ChatRepository,
+) : GetChatUseCase {
+    override suspend fun invoke(forceUpdate: Boolean) {
+        repository.getChat(forceUpdate = forceUpdate)
     }
 }

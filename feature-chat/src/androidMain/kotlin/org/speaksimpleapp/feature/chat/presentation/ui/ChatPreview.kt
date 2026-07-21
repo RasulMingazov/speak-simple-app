@@ -8,8 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.speaksimpleapp.core.design.theme.SpeakSimpleTheme
-import org.speaksimpleapp.feature.chat.domain.model.ChatId
-import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
 import org.speaksimpleapp.feature.chat.presentation.ChatContent
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent
 import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent
@@ -60,7 +58,7 @@ private fun previewMessagesState(): ChatMessagesComponent.UiState =
             ),
         ),
         assistantTypingKey = null,
-        sendingAvailability = MessageSendingAvailability.Available(messagesBeforeWarning = 98),
+        isMessageLimitReached = false,
         isInitialLoading = false,
     )
 
@@ -85,7 +83,7 @@ private fun previewMessage(
     animateAppearance = false,
 )
 
-private val PreviewChatId = ChatId("preview-chat")
+private const val PreviewChatId = "preview-chat"
 
 private object PreviewMessagesComponent : ChatMessagesComponent {
     override val uiState: StateFlow<ChatMessagesComponent.UiState> =

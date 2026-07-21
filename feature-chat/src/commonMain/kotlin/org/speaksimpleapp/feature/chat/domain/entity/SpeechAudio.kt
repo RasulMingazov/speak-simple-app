@@ -1,8 +1,8 @@
-package org.speaksimpleapp.feature.chat.domain.model
+package org.speaksimpleapp.feature.chat.domain.entity
 
 import kotlin.time.Instant
 
-data class SpeechAudio(
+internal data class SpeechAudio(
     val messageId: MessageId,
     val audioUrl: String,
     val durationMillis: Long?,

@@ -13,9 +13,11 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
-import org.speaksimpleapp.feature.chat.data.FakeChatRepository
+import org.speaksimpleapp.feature.chat.data.repository.FakeChatRepository
 import org.speaksimpleapp.feature.chat.domain.usecase.GetChatUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.DefaultGetChatUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.DefaultObserveChatUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatMessagesModelTest {
@@ -45,8 +47,8 @@ class ChatMessagesModelTest {
     private fun TestScope.createModel(): ChatMessagesModel {
         val repository = FakeChatRepository()
         return ChatMessagesModel(
-            getChatUseCase = GetChatUseCase(repository),
-            observeChatUseCase = ObserveChatUseCase(repository),
+            getChatUseCase = DefaultGetChatUseCase(repository),
+            observeChatUseCase = DefaultObserveChatUseCase(repository),
             coroutineDispatchers = testDispatchers(),
         )
     }

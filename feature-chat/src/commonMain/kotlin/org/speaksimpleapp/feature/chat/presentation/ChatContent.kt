@@ -83,13 +83,12 @@ internal fun ChatContent(
         stringResource(Res.string.chat_title)
     }
 
-    LaunchedEffect(messagesState.chatId, messagesState.sendingAvailability) {
+    LaunchedEffect(messagesState.chatId, messagesState.isMessageLimitReached) {
         val chatId = messagesState.chatId ?: return@LaunchedEffect
-        val sendingAvailability = messagesState.sendingAvailability ?: return@LaunchedEffect
         inputComponent.dispatch(
             ChatInputComponent.Event.ChatChanged(
                 chatId = chatId,
-                sendingAvailability = sendingAvailability,
+                isMessageLimitReached = messagesState.isMessageLimitReached,
             )
         )
     }

@@ -13,33 +13,33 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
 import org.speaksimpleapp.core.common.presentation.BaseModel
-import org.speaksimpleapp.feature.chat.domain.model.ChatSnapshot
+import org.speaksimpleapp.feature.chat.domain.entity.ChatSnapshot
 import org.speaksimpleapp.feature.chat.domain.usecase.GetChatUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatUseCase
-import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent.UiState
 import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent.News
+import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent.UiState
 
 internal class DefaultChatMessagesComponent(
     componentContext: ComponentContext,
-    modelFactory: ChatMessagesModel.Factory
+    modelFactory: ChatMessagesModel.Factory,
 ) : ChatMessagesComponent,
     ComponentContext by componentContext {
 
     private val model: ChatMessagesModel = instanceKeeper.getOrCreate(
-        key = "ChatMessagesModel"
+        key = "ChatMessagesModel",
     ) { modelFactory() }
 
     override val uiState: StateFlow<UiState> = model.uiState
     override val news: Flow<News> = model.news
 
     class Factory(
-        private val modelFactory: ChatMessagesModel.Factory
+        private val modelFactory: ChatMessagesModel.Factory,
     ) : ChatMessagesComponent.Factory {
 
         override fun invoke(componentContext: ComponentContext): ChatMessagesComponent =
             DefaultChatMessagesComponent(
                 componentContext = componentContext,
-                modelFactory = modelFactory
+                modelFactory = modelFactory,
             )
     }
 }
@@ -48,7 +48,7 @@ internal class ChatMessagesModel(
     private val getChatUseCase: GetChatUseCase,
     private val observeChatUseCase: ObserveChatUseCase,
     uiStateMapper: ChatMessagesUiStateMapper = DefaultChatMessagesUiStateMapper,
-    coroutineDispatchers: CoroutineDispatchers
+    coroutineDispatchers: CoroutineDispatchers,
 ) : BaseModel(coroutineDispatchers) {
 
     private val dataState: MutableStateFlow<DataState> = MutableStateFlow(DataState())

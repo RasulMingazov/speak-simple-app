@@ -1,6 +1,6 @@
-package org.speaksimpleapp.feature.chat.domain.model
+package org.speaksimpleapp.feature.chat.domain.entity
 
-data class MessageTranslation(
+internal data class MessageTranslation(
     val messageId: MessageId,
     val sourceLanguage: String,
     val targetLanguage: String,

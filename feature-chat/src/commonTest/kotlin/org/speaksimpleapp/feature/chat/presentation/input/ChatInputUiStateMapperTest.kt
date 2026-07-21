@@ -4,8 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.speaksimpleapp.feature.chat.domain.model.ChatId
-import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
+import org.speaksimpleapp.feature.chat.domain.entity.ChatId
+import org.speaksimpleapp.feature.chat.domain.entity.MessageSendingAvailability
 
 class ChatInputUiStateMapperTest {
 
@@ -16,7 +16,7 @@ class ChatInputUiStateMapperTest {
                 message = "Hello",
                 isSending = true,
                 chatId = ChatId("chat-1"),
-                sendingAvailability = MessageSendingAvailability.Available(10),
+                isMessageLimitReached = false,
             )
         )
 
@@ -32,7 +32,7 @@ class ChatInputUiStateMapperTest {
             ChatInputModel.DataState(
                 message = "Hello",
                 chatId = ChatId("chat-1"),
-                sendingAvailability = MessageSendingAvailability.Available(10),
+                isMessageLimitReached = false,
             )
         )
 
@@ -46,7 +46,7 @@ class ChatInputUiStateMapperTest {
             ChatInputModel.DataState(
                 message = "Hello",
                 chatId = ChatId("chat-1"),
-                sendingAvailability = MessageSendingAvailability.LimitReached,
+                isMessageLimitReached = true,
             )
         )
 

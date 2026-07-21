@@ -1,4 +1,4 @@
-package org.speaksimpleapp.feature.chat.domain.model
+package org.speaksimpleapp.feature.chat.domain.entity
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

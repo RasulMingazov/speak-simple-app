@@ -8,21 +8,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
 import org.speaksimpleapp.core.common.presentation.BaseModel
-import org.speaksimpleapp.feature.chat.domain.model.ChatId
-import org.speaksimpleapp.feature.chat.domain.model.MessageInputType
-import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
+import org.speaksimpleapp.feature.chat.domain.entity.ChatId
+import org.speaksimpleapp.feature.chat.domain.entity.MessageInputType
 import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent.Event
 import org.speaksimpleapp.feature.chat.presentation.input.ChatInputComponent.UiState
 
 internal class DefaultChatInputComponent(
     componentContext: ComponentContext,
-    modelFactory: ChatInputModel.Factory
+    modelFactory: ChatInputModel.Factory,
 ) : ChatInputComponent,
     ComponentContext by componentContext {
 
     private val model: ChatInputModel = instanceKeeper.getOrCreate(
-        key = "ChatInputModel"
+        key = "ChatInputModel",
     ) { modelFactory() }
 
     override val uiState: StateFlow<UiState> = model.uiState
@@ -30,13 +29,13 @@ internal class DefaultChatInputComponent(
     override fun dispatch(event: Event) = model.dispatch(event)
 
     class Factory(
-        private val modelFactory: ChatInputModel.Factory
+        private val modelFactory: ChatInputModel.Factory,
     ) : ChatInputComponent.Factory {
 
         override fun invoke(componentContext: ComponentContext): ChatInputComponent =
             DefaultChatInputComponent(
                 componentContext = componentContext,
-                modelFactory = modelFactory
+                modelFactory = modelFactory,
             )
     }
 }
@@ -44,7 +43,7 @@ internal class DefaultChatInputComponent(
 internal class ChatInputModel(
     private val sendChatMessageUseCase: SendChatMessageUseCase,
     uiStateMapper: ChatInputUiStateMapper = DefaultChatInputUiStateMapper,
-    coroutineDispatchers: CoroutineDispatchers
+    coroutineDispatchers: CoroutineDispatchers,
 ) : BaseModel(coroutineDispatchers) {
 
     private val dataState = MutableStateFlow(DataState())
@@ -67,29 +66,26 @@ internal class ChatInputModel(
     private fun onChatChanged(event: Event.ChatChanged) {
         dataState.update {
             it.copy(
-                chatId = event.chatId,
-                sendingAvailability = event.sendingAvailability,
+                chatId = ChatId(event.chatId),
+                isMessageLimitReached = event.isMessageLimitReached,
             )
         }
     }
 
     private fun onSendClicked() {
-        modelScope.launch {
-            val current = dataState.value
-            val text = current.message.trim()
-            val chatId = current.chatId ?: return@launch
-            if (
-                text.isEmpty() ||
-                current.isSending ||
-                current.sendingAvailability == MessageSendingAvailability.LimitReached
-            ) return@launch
+        val current = dataState.value
+        val text = current.message.trim()
+        val chatId = current.chatId ?: return
+        if (text.isEmpty() || current.isSending || current.isMessageLimitReached) return
 
-            dataState.update {
-                it.copy(
-                    message = "",
-                    isSending = true
-                )
-            }
+        dataState.update {
+            it.copy(
+                message = "",
+                isSending = true,
+            )
+        }
+
+        modelScope.launch {
             sendChatMessageUseCase(
                 chatId = chatId,
                 text = text,
@@ -106,16 +102,16 @@ internal class ChatInputModel(
         val message: String = "",
         val isSending: Boolean = false,
         val chatId: ChatId? = null,
-        val sendingAvailability: MessageSendingAvailability? = null,
+        val isMessageLimitReached: Boolean = false,
     )
 
     class Factory(
         private val sendChatMessageUseCase: SendChatMessageUseCase,
-        private val coroutineDispatchers: CoroutineDispatchers
+        private val coroutineDispatchers: CoroutineDispatchers,
     ) {
         operator fun invoke(): ChatInputModel = ChatInputModel(
             sendChatMessageUseCase = sendChatMessageUseCase,
-            coroutineDispatchers = coroutineDispatchers
+            coroutineDispatchers = coroutineDispatchers,
         )
     }
 }

@@ -11,12 +11,15 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
-import org.speaksimpleapp.feature.chat.data.FakeChatRepository
-import org.speaksimpleapp.feature.chat.domain.model.ChatId
-import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
+import org.speaksimpleapp.feature.chat.data.repository.FakeChatRepository
+import org.speaksimpleapp.feature.chat.domain.entity.ChatId
+import org.speaksimpleapp.feature.chat.domain.entity.MessageSendingAvailability
 import org.speaksimpleapp.feature.chat.domain.usecase.GetChatUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.ObserveChatUseCase
 import org.speaksimpleapp.feature.chat.domain.usecase.SendChatMessageUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.DefaultGetChatUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.DefaultObserveChatUseCase
+import org.speaksimpleapp.feature.chat.domain.usecase.DefaultSendChatMessageUseCase
 import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesComponent
 import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesModel
 
@@ -31,8 +34,8 @@ class ChatInputModelTest {
         fixture.inputModel.dispatch(ChatInputComponent.Event.MessageChanged("Hello"))
         fixture.inputModel.dispatch(
             ChatInputComponent.Event.ChatChanged(
-                chatId = ChatId("weekend-plans"),
-                sendingAvailability = MessageSendingAvailability.Available(10),
+                chatId = "weekend-plans",
+                isMessageLimitReached = false,
             )
         )
         fixture.inputModel.dispatch(ChatInputComponent.Event.SendClicked)
@@ -49,16 +52,16 @@ class ChatInputModelTest {
     private fun TestScope.createFixture(): Fixture {
         val repository = FakeChatRepository()
         val dispatchers = testDispatchers()
-        val observeChatUseCase = ObserveChatUseCase(repository)
+        val observeChatUseCase: ObserveChatUseCase = DefaultObserveChatUseCase(repository)
 
         return Fixture(
             messagesModel = ChatMessagesModel(
-                getChatUseCase = GetChatUseCase(repository),
+                getChatUseCase = DefaultGetChatUseCase(repository),
                 observeChatUseCase = observeChatUseCase,
                 coroutineDispatchers = dispatchers,
             ),
             inputModel = ChatInputModel(
-                sendChatMessageUseCase = SendChatMessageUseCase(repository),
+                sendChatMessageUseCase = DefaultSendChatMessageUseCase(repository),
                 coroutineDispatchers = dispatchers,
             ),
         )

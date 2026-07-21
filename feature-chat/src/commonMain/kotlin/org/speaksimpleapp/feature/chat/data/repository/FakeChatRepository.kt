@@ -1,25 +1,25 @@
-package org.speaksimpleapp.feature.chat.data
+package org.speaksimpleapp.feature.chat.data.repository
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlin.time.Instant
-import org.speaksimpleapp.feature.chat.domain.model.AssistantReplyResult
-import org.speaksimpleapp.feature.chat.domain.model.Chat
-import org.speaksimpleapp.feature.chat.domain.model.ChatId
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
-import org.speaksimpleapp.feature.chat.domain.model.ChatSnapshot
-import org.speaksimpleapp.feature.chat.domain.model.ChatStatus
-import org.speaksimpleapp.feature.chat.domain.model.ChatUsage
-import org.speaksimpleapp.feature.chat.domain.model.ClientMessageId
-import org.speaksimpleapp.feature.chat.domain.model.DefaultChatMessageLimit
-import org.speaksimpleapp.feature.chat.domain.model.MessageAuthor
-import org.speaksimpleapp.feature.chat.domain.model.MessageId
-import org.speaksimpleapp.feature.chat.domain.model.MessageInputType
-import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
-import org.speaksimpleapp.feature.chat.domain.model.SendMessageCommand
-import org.speaksimpleapp.feature.chat.domain.model.SendMessageResult
+import org.speaksimpleapp.feature.chat.domain.entity.AssistantReplyResult
+import org.speaksimpleapp.feature.chat.domain.entity.Chat
+import org.speaksimpleapp.feature.chat.domain.entity.ChatId
+import org.speaksimpleapp.feature.chat.domain.entity.ChatMessage
+import org.speaksimpleapp.feature.chat.domain.entity.ChatSnapshot
+import org.speaksimpleapp.feature.chat.domain.entity.ChatStatus
+import org.speaksimpleapp.feature.chat.domain.entity.ChatUsage
+import org.speaksimpleapp.feature.chat.domain.entity.ClientMessageId
+import org.speaksimpleapp.feature.chat.domain.entity.DefaultChatMessageLimit
+import org.speaksimpleapp.feature.chat.domain.entity.MessageAuthor
+import org.speaksimpleapp.feature.chat.domain.entity.MessageId
+import org.speaksimpleapp.feature.chat.domain.entity.MessageInputType
+import org.speaksimpleapp.feature.chat.domain.entity.MessageSendingAvailability
+import org.speaksimpleapp.feature.chat.domain.entity.SendMessageCommand
+import org.speaksimpleapp.feature.chat.domain.entity.SendMessageResult
 import org.speaksimpleapp.feature.chat.domain.repository.ChatRepository
 
 internal class FakeChatRepository : ChatRepository {

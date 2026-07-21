@@ -1,6 +1,6 @@
-package org.speaksimpleapp.feature.chat.domain.model
+package org.speaksimpleapp.feature.chat.domain.entity
 
-data class ChatSnapshot(
+internal data class ChatSnapshot(
     val chat: Chat,
     val messages: List<ChatMessage>,
     val messageLimit: ChatMessageLimit,

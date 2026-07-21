@@ -4,9 +4,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
-import org.speaksimpleapp.feature.chat.data.FakeChatRepository
-import org.speaksimpleapp.feature.chat.domain.model.ChatId
-import org.speaksimpleapp.feature.chat.domain.model.MessageInputType
+import org.speaksimpleapp.feature.chat.data.repository.FakeChatRepository
+import org.speaksimpleapp.feature.chat.domain.entity.ChatId
+import org.speaksimpleapp.feature.chat.domain.entity.MessageInputType
 
 class SendChatMessageUseCaseTest {
 
@@ -14,7 +14,7 @@ class SendChatMessageUseCaseTest {
     fun createsCommandDataForRepository() = runTest {
         val repository = FakeChatRepository()
         repository.getChat(forceUpdate = false)
-        val useCase = SendChatMessageUseCase(repository)
+        val useCase: SendChatMessageUseCase = DefaultSendChatMessageUseCase(repository)
 
         val result = useCase(
             chatId = ChatId("weekend-plans"),

@@ -3,8 +3,6 @@ package org.speaksimpleapp.feature.chat.presentation.messages
 import com.arkivanov.decompose.ComponentContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import org.speaksimpleapp.feature.chat.domain.model.ChatId
-import org.speaksimpleapp.feature.chat.domain.model.MessageSendingAvailability
 
 interface ChatMessagesComponent {
     val uiState: StateFlow<UiState>
@@ -15,11 +13,11 @@ interface ChatMessagesComponent {
     }
 
     data class UiState(
-        val chatId: ChatId?,
+        val chatId: String?,
         val title: String,
         val messageItems: List<MessageItem>,
         val assistantTypingKey: String?,
-        val sendingAvailability: MessageSendingAvailability?,
+        val isMessageLimitReached: Boolean,
         val isInitialLoading: Boolean,
     )
 

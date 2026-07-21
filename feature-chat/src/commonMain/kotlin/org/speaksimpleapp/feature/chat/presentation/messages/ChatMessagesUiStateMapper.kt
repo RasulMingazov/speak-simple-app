@@ -1,7 +1,8 @@
 package org.speaksimpleapp.feature.chat.presentation.messages
 
-import org.speaksimpleapp.feature.chat.domain.model.ChatMessage
-import org.speaksimpleapp.feature.chat.domain.model.MessageAuthor
+import org.speaksimpleapp.feature.chat.domain.entity.ChatMessage
+import org.speaksimpleapp.feature.chat.domain.entity.MessageAuthor
+import org.speaksimpleapp.feature.chat.domain.entity.MessageSendingAvailability
 import org.speaksimpleapp.feature.chat.presentation.messages.ChatMessagesModel.DataState
 
 internal interface ChatMessagesUiStateMapper {
@@ -11,11 +12,12 @@ internal interface ChatMessagesUiStateMapper {
 internal object DefaultChatMessagesUiStateMapper : ChatMessagesUiStateMapper {
     override fun invoke(dataState: DataState): ChatMessagesComponent.UiState =
         ChatMessagesComponent.UiState(
-            chatId = dataState.snapshot?.chat?.id,
+            chatId = dataState.snapshot?.chat?.id?.value,
             title = dataState.snapshot?.chat?.title.orEmpty(),
             messageItems = dataState.snapshot?.messages.orEmpty().toMessageItems(),
             assistantTypingKey = dataState.snapshot?.messages.orEmpty().assistantTypingKey(),
-            sendingAvailability = dataState.snapshot?.sendingAvailability,
+            isMessageLimitReached =
+                dataState.snapshot?.sendingAvailability == MessageSendingAvailability.LimitReached,
             isInitialLoading = dataState.snapshot == null,
         )
 

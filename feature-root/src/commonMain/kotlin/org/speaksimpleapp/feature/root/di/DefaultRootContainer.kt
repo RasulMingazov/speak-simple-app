@@ -2,7 +2,7 @@ package org.speaksimpleapp.feature.root.di
 
 import org.speaksimpleapp.core.common.coroutines.DefaultCoroutineDispatchers
 import org.speaksimpleapp.feature.auth.di.AuthContainer
-import org.speaksimpleapp.feature.chat.di.DefaultChatContainer
+import org.speaksimpleapp.feature.chat.di.createChatComponentFactory
 import org.speaksimpleapp.feature.root.DefaultRootComponent
 import org.speaksimpleapp.feature.root.RootComponent
 import org.speaksimpleapp.feature.root.RootModel
@@ -10,7 +10,7 @@ import org.speaksimpleapp.feature.root.RootModel
 class DefaultRootContainer(
     authContainer: AuthContainer,
 ) : RootContainer {
-    private val chatContainer by lazy(::DefaultChatContainer)
+    private val chatComponentFactory by lazy(::createChatComponentFactory)
 
     override val rootComponentFactory: RootComponent.Factory by lazy {
         DefaultRootComponent.Factory(
@@ -20,7 +20,7 @@ class DefaultRootContainer(
                 coroutineDispatchers = DefaultCoroutineDispatchers,
             ),
             loginComponentFactory = authContainer.loginComponentFactory,
-            chatComponentFactory = chatContainer.chatComponentFactory,
+            chatComponentFactory = chatComponentFactory,
         )
     }
 }
