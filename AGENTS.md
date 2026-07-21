@@ -18,7 +18,8 @@ Modules:
 
 - `app`: Android application wrapper.
 - `shared`: shared app entry point.
-- `feature-root`: root Decompose component and app-level routing.
+- `feature-root`: bootstrap and authentication gate.
+- `feature-main`: authenticated app shell and product-feature routing.
 - `feature-auth`: authentication domain, data layer, platform integrations, and login UI.
 - `feature-chat`: first product feature.
 - `core-common`: shared utilities, coroutine dispatchers, `BaseModel`.
@@ -50,6 +51,16 @@ Pattern:
 - `FeatureUiStateMapper.kt`: interface plus default implementation mapping `DataState` to `UiState`.
 
 Only the component contract, its required presentation models, the public content composable, and a feature entry point should normally cross the Gradle-module boundary. Keep default components, models, mappers, and their factories `internal`.
+
+Use Decompose navigation models such as `ChildStack` for mutually exclusive screens. Do not eagerly create every route child and switch composables with a manual enum: inactive children must not initialize their models, subscriptions, or data loading.
+
+Keep navigation ownership hierarchical:
+
+- `feature-root` decides only between bootstrap, unauthenticated, and authenticated destinations.
+- `feature-main` owns navigation inside the authenticated product and composes product features such as `feature-chat`.
+- A product feature owns its own nested navigation and children.
+
+Adding another authenticated feature should normally change `feature-main`, not `feature-root`. The root module must not depend directly on individual product features.
 
 For child components, keep the component contract, default implementation, model, and content close to each other in the package that owns the child.
 
@@ -175,6 +186,16 @@ Do not introduce a DI framework unless the user explicitly asks for it. Manual D
 
 Application and shared host modules must not construct feature data sources, repositories, identity providers, or storage implementations directly. They should pass platform inputs into the feature's public factory and receive a narrow container or component factory.
 
+Keep container lifetimes explicit:
+
+- Application-scoped containers may own process-wide infrastructure such as authentication session storage and HTTP clients.
+- An authenticated/user-scoped feature container must be created when its owning `MainComponent` is created and released when that authenticated branch is destroyed. Never retain user data repositories inside an application-scoped child factory across logout/login.
+- A component factory may be application-scoped only when invoking it creates fresh user-scoped dependencies for the new component.
+
+Expose composition through `create...ComponentFactory` functions and keep `Default...Container` implementations `internal`. Do not expose repositories or data/platform implementations merely to connect feature modules; provide a narrow feature-owned integration contract such as `AuthSessionController` or a platform-specific container facade.
+
+Platform factories own their adapters. For Android auth, the feature creates and hides its activity provider while the public Android auth container exposes only lifecycle attachment. On iOS, drive the root Decompose lifecycle from the owning `UIViewController` lifecycle and destroy it when Compose content is disposed.
+
 ## UI
 
 Use Compose Multiplatform.
@@ -188,6 +209,7 @@ Guidelines:
 - Keep cards and bubbles stable in size and readable on small screens.
 - Avoid nested cards.
 - Keep strings in `composeResources`.
+- Use the platform system splash for initial app bootstrap on Android. Keep the Compose bootstrap child as a static fallback and do not show an indeterminate progress indicator for initial session restoration.
 
 Preview files currently live in Android source set when Android Studio preview is needed.
 
@@ -225,6 +247,12 @@ For broad feature-auth changes, use:
 
 ```bash
 ./gradlew :feature-auth:testAndroidHostTest :feature-auth:compileKotlinIosSimulatorArm64 :shared:compileKotlinIosSimulatorArm64 :app:assembleDebug
+```
+
+For root or authenticated navigation changes, use:
+
+```bash
+./gradlew :feature-root:testAndroidHostTest :feature-main:compileKotlinIosSimulatorArm64 :feature-root:compileKotlinIosSimulatorArm64 :shared:compileKotlinIosSimulatorArm64 :app:assembleDebug
 ```
 
 If only a narrow non-UI change was made, a smaller Gradle target is acceptable, but mention what was run.

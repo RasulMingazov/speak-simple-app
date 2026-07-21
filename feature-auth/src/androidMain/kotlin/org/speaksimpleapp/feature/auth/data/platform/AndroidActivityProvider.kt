@@ -4,7 +4,7 @@ import android.app.Activity
 import org.speaksimpleapp.feature.auth.data.exception.AuthDataException
 import java.lang.ref.WeakReference
 
-class AndroidActivityProvider {
+internal class AndroidActivityProvider {
     private val lock = Any()
     private var activityReference: WeakReference<Activity>? = null
 

@@ -2,25 +2,24 @@ package org.speaksimpleapp.feature.root.di
 
 import org.speaksimpleapp.core.common.coroutines.DefaultCoroutineDispatchers
 import org.speaksimpleapp.feature.auth.di.AuthContainer
-import org.speaksimpleapp.feature.chat.di.createChatComponentFactory
+import org.speaksimpleapp.feature.main.di.createMainComponentFactory
+import org.speaksimpleapp.feature.main.presentation.MainComponent
 import org.speaksimpleapp.feature.root.DefaultRootComponent
 import org.speaksimpleapp.feature.root.RootComponent
 import org.speaksimpleapp.feature.root.RootModel
 
-class DefaultRootContainer(
+internal class DefaultRootContainer(
     authContainer: AuthContainer,
-) : RootContainer {
-    private val chatComponentFactory by lazy(::createChatComponentFactory)
+) {
+    private val mainComponentFactory: MainComponent.Factory = createMainComponentFactory()
 
-    override val rootComponentFactory: RootComponent.Factory by lazy {
+    val rootComponentFactory: RootComponent.Factory =
         DefaultRootComponent.Factory(
             modelFactory = RootModel.Factory(
-                authRepository = authContainer.authRepository,
-                restoreSession = authContainer.restoreSession,
+                authSessionController = authContainer.sessionController,
                 coroutineDispatchers = DefaultCoroutineDispatchers,
             ),
             loginComponentFactory = authContainer.loginComponentFactory,
-            chatComponentFactory = chatComponentFactory,
+            mainComponentFactory = mainComponentFactory,
         )
-    }
 }

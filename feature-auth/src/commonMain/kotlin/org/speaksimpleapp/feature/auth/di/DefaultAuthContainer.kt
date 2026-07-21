@@ -26,14 +26,17 @@ internal class DefaultAuthContainer(
         storage = platform.secureSessionStorage,
     )
 
-    override val authRepository: AuthRepository = DefaultAuthRepository(
+    private val authRepository: AuthRepository = DefaultAuthRepository(
         remoteDataSource = remoteDataSource,
         localDataSource = localDataSource,
         googleIdentityProvider = platform.googleIdentityProvider,
         devicePlatform = config.devicePlatform,
     )
 
-    override val restoreSession: RestoreSessionUseCase = DefaultRestoreSessionUseCase(authRepository)
+    override val sessionController: AuthSessionController = DefaultAuthSessionController(
+        repository = authRepository,
+        restoreSessionUseCase = DefaultRestoreSessionUseCase(authRepository),
+    )
 
     override val loginComponentFactory: LoginComponent.Factory = DefaultLoginComponent.Factory(
         LoginModel.Factory(

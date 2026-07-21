@@ -69,12 +69,10 @@ internal class LoginModel(
             dataState.update { state ->
                 when (result) {
                     LoginResult.Success,
-                    LoginResult.Cancelled,
-                    -> state.copy(
+                    LoginResult.Cancelled, -> state.copy(
                         isGoogleSignInInProgress = false,
                         hasError = false,
                     )
-
                     LoginResult.Error -> state.copy(
                         isGoogleSignInInProgress = false,
                         hasError = true,

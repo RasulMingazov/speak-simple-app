@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":feature-auth"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.decompose)
 
     testImplementation(libs.junit)

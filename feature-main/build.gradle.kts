@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "org.speaksimpleapp.feature.root"
+        namespace = "org.speaksimpleapp.feature.main"
         compileSdk = libs.versions.compileSdk.get().toInt()
         minSdk = libs.versions.minSdk.get().toInt()
         withHostTest {}
@@ -21,8 +21,5 @@ kotlin {
 }
 
 commonMainDependencies {
-    implementation(project(":core-common"))
-    implementation(project(":core-design"))
-    implementation(project(":feature-auth"))
-    implementation(project(":feature-main"))
+    implementation(project(":feature-chat"))
 }

@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.StateFlow
 import org.speaksimpleapp.feature.auth.domain.entity.LoginResult
 import org.speaksimpleapp.feature.auth.domain.entity.SessionState
 
-interface AuthRepository {
+internal interface AuthRepository {
 
     val sessionState: StateFlow<SessionState>
 
