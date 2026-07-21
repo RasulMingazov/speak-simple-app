@@ -1,0 +1,11 @@
+<resources>
+    <string name="login_brand_mark">S</string>
+    <string name="login_title">Практикуйте small talk с ИИ-наставником</string>
+    <string name="login_subtitle">Разминайтесь в коротких диалогах, получайте понятные подсказки и говорите по-английски естественнее.</string>
+    <string name="login_google">Продолжить с Google</string>
+    <string name="login_privacy">Аккаунт нужен только для истории занятий и синхронизации прогресса между устройствами.</string>
+    <string name="login_google_icon_description">Google</string>
+    <string name="login_error_icon_description">Предупреждение</string>
+    <string name="login_error_title">Что-то пошло не так</string>
+    <string name="login_error_message">Попробуйте ещё раз.</string>
+</resources>

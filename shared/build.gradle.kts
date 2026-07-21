@@ -21,6 +21,7 @@ kotlin {
 commonMainDependencies {
     implementation(project(":core-design"))
     implementation(project(":feature-root"))
+    implementation(project(":feature-auth"))
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
 }

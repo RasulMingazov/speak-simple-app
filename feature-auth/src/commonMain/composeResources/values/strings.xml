@@ -1,0 +1,11 @@
+<resources>
+    <string name="login_brand_mark">S</string>
+    <string name="login_title">Practice small talk with an AI coach</string>
+    <string name="login_subtitle">Warm up with short conversations, get clear suggestions, and sound more natural in English.</string>
+    <string name="login_google">Continue with Google</string>
+    <string name="login_privacy">We use your account only to save practice history and keep your progress available across devices.</string>
+    <string name="login_google_icon_description">Google</string>
+    <string name="login_error_icon_description">Warning</string>
+    <string name="login_error_title">Something went wrong</string>
+    <string name="login_error_message">Please try again.</string>
+</resources>

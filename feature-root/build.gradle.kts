@@ -20,5 +20,8 @@ kotlin {
 }
 
 commonMainDependencies {
+    implementation(project(":core-common"))
+    implementation(project(":core-design"))
+    implementation(project(":feature-auth"))
     implementation(project(":feature-chat"))
 }
