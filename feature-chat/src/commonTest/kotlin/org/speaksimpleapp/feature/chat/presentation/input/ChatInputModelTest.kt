@@ -4,13 +4,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
+import org.speaksimpleapp.core.test.testDispatchers
 import org.speaksimpleapp.feature.chat.data.repository.FakeChatRepository
 import org.speaksimpleapp.feature.chat.domain.entity.ChatId
 import org.speaksimpleapp.feature.chat.domain.entity.MessageSendingAvailability
@@ -66,11 +64,6 @@ class ChatInputModelTest {
             ),
         )
     }
-
-    private fun TestScope.testDispatchers(): CoroutineDispatchers =
-        object : CoroutineDispatchers {
-            override val main: CoroutineDispatcher = StandardTestDispatcher(testScheduler)
-        }
 
     private data class Fixture(
         val messagesModel: ChatMessagesModel,

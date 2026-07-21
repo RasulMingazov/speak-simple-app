@@ -27,6 +27,7 @@ dependencyResolutionManagement {
 rootProject.name = "speak-simple-app"
 include(":app")
 include(":core-common")
+include(":core-test")
 include(":core-design")
 include(":shared")
 include(":feature-root")

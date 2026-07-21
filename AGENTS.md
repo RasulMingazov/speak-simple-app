@@ -23,6 +23,7 @@ Modules:
 - `feature-auth`: authentication domain, data layer, platform integrations, and login UI.
 - `feature-chat`: first product feature.
 - `core-common`: shared utilities, coroutine dispatchers, `BaseModel`.
+- `core-test`: reusable multiplatform test infrastructure; depend on it only from test source sets.
 - `core-design`: app theme, typography, colors.
 
 ## Working Rules
@@ -192,7 +193,7 @@ Keep container lifetimes explicit:
 - An authenticated/user-scoped feature container must be created when its owning `MainComponent` is created and released when that authenticated branch is destroyed. Never retain user data repositories inside an application-scoped child factory across logout/login.
 - A component factory may be application-scoped only when invoking it creates fresh user-scoped dependencies for the new component.
 
-Expose composition through `create...ComponentFactory` functions and keep `Default...Container` implementations `internal`. Do not expose repositories or data/platform implementations merely to connect feature modules; provide a narrow feature-owned integration contract such as `AuthSessionController` or a platform-specific container facade.
+Expose composition through `create...ComponentFactory` functions and keep `Default...Container` implementations `internal`. Do not expose repositories or data/platform implementations merely to connect feature modules; expose focused domain use-case interfaces or a platform-specific container facade.
 
 Platform factories own their adapters. For Android auth, the feature creates and hides its activity provider while the public Android auth container exposes only lifecycle attachment. On iOS, drive the root Decompose lifecycle from the owning `UIViewController` lifecycle and destroy it when Compose content is disposed.
 
@@ -223,6 +224,8 @@ Formatting rules:
 ## Tests
 
 Use focused tests for models and mappers.
+
+Put reusable cross-feature fixtures and test infrastructure in `core-test` under the `org.speaksimpleapp.core.test` package. Add this module only to test source-set dependencies; do not place test helpers in `core-common/commonMain` or production feature source sets. Keep feature-specific fakes and builders in their owning feature tests so `core-test` never depends on feature modules.
 
 Prefer testing:
 

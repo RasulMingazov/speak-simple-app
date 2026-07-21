@@ -1,12 +1,10 @@
 package org.speaksimpleapp.feature.auth.presentation
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
+import org.speaksimpleapp.core.test.testDispatchers
 import org.speaksimpleapp.feature.auth.domain.entity.LoginResult
 import org.speaksimpleapp.feature.auth.domain.usecase.LoginWithGoogleUseCase
 import speak_simple_app.feature_auth.generated.resources.Res
@@ -23,7 +21,7 @@ class LoginModelTest {
         val loginWithGoogleUseCase = FakeLoginWithGoogleUseCase(LoginResult.Error)
         val model = LoginModel(
             loginWithGoogleUseCase = loginWithGoogleUseCase,
-            coroutineDispatchers = TestDispatchers(StandardTestDispatcher(testScheduler)),
+            coroutineDispatchers = testDispatchers(),
         )
 
         model.dispatch(LoginComponent.Event.GoogleLoginClicked)
@@ -39,7 +37,7 @@ class LoginModelTest {
         val loginWithGoogleUseCase = FakeLoginWithGoogleUseCase(LoginResult.Cancelled)
         val model = LoginModel(
             loginWithGoogleUseCase = loginWithGoogleUseCase,
-            coroutineDispatchers = TestDispatchers(StandardTestDispatcher(testScheduler)),
+            coroutineDispatchers = testDispatchers(),
         )
 
         model.dispatch(LoginComponent.Event.GoogleLoginClicked)
@@ -55,7 +53,7 @@ class LoginModelTest {
         val loginWithGoogleUseCase = FakeLoginWithGoogleUseCase { pendingResult.await() }
         val model = LoginModel(
             loginWithGoogleUseCase = loginWithGoogleUseCase,
-            coroutineDispatchers = TestDispatchers(StandardTestDispatcher(testScheduler)),
+            coroutineDispatchers = testDispatchers(),
         )
 
         model.dispatch(LoginComponent.Event.GoogleLoginClicked)
@@ -84,5 +82,3 @@ private class FakeLoginWithGoogleUseCase(
         return login()
     }
 }
-
-private class TestDispatchers(override val main: CoroutineDispatcher) : CoroutineDispatchers

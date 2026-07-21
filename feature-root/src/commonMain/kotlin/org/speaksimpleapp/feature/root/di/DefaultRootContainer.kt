@@ -16,7 +16,8 @@ internal class DefaultRootContainer(
     val rootComponentFactory: RootComponent.Factory =
         DefaultRootComponent.Factory(
             modelFactory = RootModel.Factory(
-                authSessionController = authContainer.sessionController,
+                observeSessionUseCase = authContainer.observeSessionUseCase,
+                restoreSessionUseCase = authContainer.restoreSessionUseCase,
                 coroutineDispatchers = DefaultCoroutineDispatchers,
             ),
             loginComponentFactory = authContainer.loginComponentFactory,

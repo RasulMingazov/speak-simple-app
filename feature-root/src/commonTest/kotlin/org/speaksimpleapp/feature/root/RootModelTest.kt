@@ -1,16 +1,15 @@
 package org.speaksimpleapp.feature.root
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
-import org.speaksimpleapp.feature.auth.di.AuthSessionController
+import org.speaksimpleapp.core.test.testDispatchers
 import org.speaksimpleapp.feature.auth.domain.entity.AuthSession
 import org.speaksimpleapp.feature.auth.domain.entity.AuthUser
 import org.speaksimpleapp.feature.auth.domain.entity.SessionState
+import org.speaksimpleapp.feature.auth.domain.usecase.ObserveSessionUseCase
+import org.speaksimpleapp.feature.auth.domain.usecase.RestoreSessionUseCase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -20,20 +19,22 @@ import kotlin.test.assertTrue
 class RootModelTest {
     @Test
     fun `restores session and routes from bootstrap to login`() = runTest {
-        val sessionController = FakeAuthSessionController(
-            restoredState = SessionState.SignedOut,
-        )
+        val sessionState = MutableStateFlow<SessionState>(SessionState.Initializing)
+        val restoreSessionUseCase = FakeRestoreSessionUseCase {
+            sessionState.value = SessionState.SignedOut
+        }
         val destinations = mutableListOf<RootModel.Destination>()
         val model = RootModel(
-            authSessionController = sessionController,
+            observeSessionUseCase = FakeObserveSessionUseCase(sessionState),
+            restoreSessionUseCase = restoreSessionUseCase,
             onDestinationChanged = destinations::add,
-            coroutineDispatchers = TestDispatchers(StandardTestDispatcher(testScheduler)),
+            coroutineDispatchers = testDispatchers(),
         )
 
         assertTrue(model.isBootstrapping.value)
         runCurrent()
 
-        assertEquals(1, sessionController.restoreInvocationCount)
+        assertEquals(1, restoreSessionUseCase.invocationCount)
         assertEquals(listOf(RootModel.Destination.LOGIN), destinations)
         assertFalse(model.isBootstrapping.value)
         model.onDestroy()
@@ -41,18 +42,19 @@ class RootModelTest {
 
     @Test
     fun `routes to main once for equivalent signed in states`() = runTest {
-        val sessionController = FakeAuthSessionController()
+        val sessionState = MutableStateFlow<SessionState>(SessionState.Initializing)
         val destinations = mutableListOf<RootModel.Destination>()
         val model = RootModel(
-            authSessionController = sessionController,
+            observeSessionUseCase = FakeObserveSessionUseCase(sessionState),
+            restoreSessionUseCase = FakeRestoreSessionUseCase(),
             onDestinationChanged = destinations::add,
-            coroutineDispatchers = TestDispatchers(StandardTestDispatcher(testScheduler)),
+            coroutineDispatchers = testDispatchers(),
         )
         runCurrent()
 
-        sessionController.state.value = SessionState.SignedIn(Session)
+        sessionState.value = SessionState.SignedIn(Session)
         runCurrent()
-        sessionController.state.value = SessionState.SignedIn(
+        sessionState.value = SessionState.SignedIn(
             Session.copy(accessToken = "updated-access-token"),
         )
         runCurrent()
@@ -77,20 +79,20 @@ class RootModelTest {
     }
 }
 
-private class FakeAuthSessionController(
-    private val restoredState: SessionState? = null,
-) : AuthSessionController {
-    override val state = MutableStateFlow<SessionState>(SessionState.Initializing)
-
-    var restoreInvocationCount: Int = 0
-        private set
-
-    override suspend fun restore() {
-        restoreInvocationCount += 1
-        restoredState?.let { state.value = it }
-    }
+private class FakeObserveSessionUseCase(
+    private val state: MutableStateFlow<SessionState>,
+) : ObserveSessionUseCase {
+    override fun invoke() = state
 }
 
-private class TestDispatchers(
-    override val main: CoroutineDispatcher,
-) : CoroutineDispatchers
+private class FakeRestoreSessionUseCase(
+    private val restore: suspend () -> Unit = {},
+) : RestoreSessionUseCase {
+    var invocationCount: Int = 0
+        private set
+
+    override suspend fun invoke() {
+        invocationCount += 1
+        restore()
+    }
+}

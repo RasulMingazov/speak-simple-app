@@ -1,4 +1,5 @@
 import org.speaksimpleapp.convention.extensions.commonMainDependencies
+import org.speaksimpleapp.convention.extensions.commonTestDependencies
 
 plugins {
     alias(libs.plugins.speaksimple.kmp.library)
@@ -25,4 +26,8 @@ commonMainDependencies {
     implementation(project(":core-design"))
     implementation(project(":feature-auth"))
     implementation(project(":feature-main"))
+}
+
+commonTestDependencies {
+    implementation(project(":core-test"))
 }

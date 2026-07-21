@@ -7,7 +7,9 @@ import org.speaksimpleapp.feature.auth.data.remote.platformHttpClientEngine
 import org.speaksimpleapp.feature.auth.data.repository.DefaultAuthRepository
 import org.speaksimpleapp.feature.auth.domain.repository.AuthRepository
 import org.speaksimpleapp.feature.auth.domain.usecase.DefaultLoginWithGoogleUseCase
+import org.speaksimpleapp.feature.auth.domain.usecase.DefaultObserveSessionUseCase
 import org.speaksimpleapp.feature.auth.domain.usecase.DefaultRestoreSessionUseCase
+import org.speaksimpleapp.feature.auth.domain.usecase.ObserveSessionUseCase
 import org.speaksimpleapp.feature.auth.domain.usecase.RestoreSessionUseCase
 import org.speaksimpleapp.feature.auth.presentation.DefaultLoginComponent
 import org.speaksimpleapp.feature.auth.presentation.LoginComponent
@@ -33,10 +35,11 @@ internal class DefaultAuthContainer(
         devicePlatform = config.devicePlatform,
     )
 
-    override val sessionController: AuthSessionController = DefaultAuthSessionController(
-        repository = authRepository,
-        restoreSessionUseCase = DefaultRestoreSessionUseCase(authRepository),
-    )
+    override val observeSessionUseCase: ObserveSessionUseCase =
+        DefaultObserveSessionUseCase(authRepository)
+
+    override val restoreSessionUseCase: RestoreSessionUseCase =
+        DefaultRestoreSessionUseCase(authRepository)
 
     override val loginComponentFactory: LoginComponent.Factory = DefaultLoginComponent.Factory(
         LoginModel.Factory(

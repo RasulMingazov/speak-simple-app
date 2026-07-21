@@ -8,11 +8,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.speaksimpleapp.core.common.coroutines.CoroutineDispatchers
 import org.speaksimpleapp.core.common.presentation.BaseModel
-import org.speaksimpleapp.feature.auth.di.AuthSessionController
 import org.speaksimpleapp.feature.auth.domain.entity.SessionState
+import org.speaksimpleapp.feature.auth.domain.usecase.ObserveSessionUseCase
+import org.speaksimpleapp.feature.auth.domain.usecase.RestoreSessionUseCase
 
 internal class RootModel(
-    private val authSessionController: AuthSessionController,
+    observeSessionUseCase: ObserveSessionUseCase,
+    private val restoreSessionUseCase: RestoreSessionUseCase,
     private val onDestinationChanged: (Destination) -> Unit,
     coroutineDispatchers: CoroutineDispatchers,
 ) : BaseModel(coroutineDispatchers) {
@@ -24,11 +26,11 @@ internal class RootModel(
     }
 
     init {
-        authSessionController.state
+        observeSessionUseCase()
             .onEach(::onSessionStateChanged)
             .launchIn(modelScope)
 
-        modelScope.launch { authSessionController.restore() }
+        modelScope.launch { restoreSessionUseCase() }
     }
 
     private fun onSessionStateChanged(sessionState: SessionState) {
@@ -54,11 +56,13 @@ internal class RootModel(
     }
 
     class Factory(
-        private val authSessionController: AuthSessionController,
+        private val observeSessionUseCase: ObserveSessionUseCase,
+        private val restoreSessionUseCase: RestoreSessionUseCase,
         private val coroutineDispatchers: CoroutineDispatchers,
     ) {
         operator fun invoke(onDestinationChanged: (Destination) -> Unit) = RootModel(
-            authSessionController = authSessionController,
+            observeSessionUseCase = observeSessionUseCase,
+            restoreSessionUseCase = restoreSessionUseCase,
             onDestinationChanged = onDestinationChanged,
             coroutineDispatchers = coroutineDispatchers,
         )

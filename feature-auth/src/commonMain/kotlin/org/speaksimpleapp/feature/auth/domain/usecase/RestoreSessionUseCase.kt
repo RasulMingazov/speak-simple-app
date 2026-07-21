@@ -2,7 +2,7 @@ package org.speaksimpleapp.feature.auth.domain.usecase
 
 import org.speaksimpleapp.feature.auth.domain.repository.AuthRepository
 
-internal interface RestoreSessionUseCase {
+interface RestoreSessionUseCase {
     suspend operator fun invoke()
 }
 
